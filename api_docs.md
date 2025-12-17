@@ -44,7 +44,7 @@ Dùng cho tất cả các role (User, Admin, Company) .
     "role": "USER", // Các giá trị: USER, COMPANY, ADMIN
     "profile": {
       "full_name": "Nguyễn Văn A",
-      "avatar_url": "https://s3.cloud/avatar/user101.jpg"
+      "avatar_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD..."
     }
   }
 }
@@ -72,7 +72,7 @@ Dựa trên Use Case 402 .
     "full_name": "Nguyễn Văn A",
     "phone_number": "0987654321",
     "email": "nguyenvana@email.com",
-    "avatar_url": "https://s3.cloud/avatar/user101.jpg",
+    "avatar_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...",
     "created_at": "2025-01-15T08:30:00Z"
   }
 }
@@ -150,9 +150,9 @@ Dựa trên Use Case 201 . Người dùng gửi thông tin sự cố và chọn 
   "location_address": "Số 1 Đại Cồ Việt, Hai Bà Trưng, Hà Nội",
   "latitude": 21.0073,
   "longitude": 105.8431,
-  "images_url": [
-    "https://s3.cloud/incidents/img1.jpg",
-    "https://s3.cloud/incidents/img2.jpg"
+  "images_base64": [
+    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...",
+    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD..."
   ]
 }
 
@@ -229,7 +229,7 @@ Dùng cho màn hình theo dõi trạng thái .
     },
     "incident": {
       "desc": "Xe bị thủng lốp...",
-      "images": ["url1", "url2"],
+      "images_base64": ["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...", "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD..."]
       "address": "Số 1 Đại Cồ Việt"
     },
     "status": "Moving",
@@ -269,7 +269,7 @@ Dựa trên Use Case 103 .
       "content": "Xe mình bị kêu lạ ở gầm...",
       "author": {
         "name": "Trần Văn B",
-        "avatar": "url_avatar"
+        "avatar_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD..."
       },
       "comment_count": 5,
       "created_at": "2025-11-19T14:20:00Z",
