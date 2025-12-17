@@ -1,13 +1,5 @@
-Dựa trên tài liệu thiết kế hệ thống và yêu cầu của bạn về việc thiết kế chi tiết cả cấu trúc **Request** (Yêu cầu) và **Response** (Phản hồi), dưới đây là tài liệu API Documentation hoàn chỉnh.
 
-Tài liệu này được xây dựng dựa trên:
-
-* **Cơ sở dữ liệu:** Sơ đồ ERD cung cấp trong báo cáo .
-* **Use Cases:** Các quy trình nghiệp vụ như Gửi yêu cầu cứu hộ , Tìm kiếm , Cập nhật trạng thái .
-
----
-
-# RESTful API Documentation: Hệ thống Hỗ trợ Sự cố Xe trên đường
+# RESTful API Documentation: ResQOnRoad
 
 **Thông tin chung:**
 
