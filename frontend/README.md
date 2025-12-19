@@ -1,70 +1,116 @@
-# Getting Started with Create React App
+# Frontend (React + Vite + Tailwind CSS v4)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Phần frontend chạy độc lập với backend và chỉ kết nối qua API.
 
-## Available Scripts
+## 1) Yêu cầu môi trường
 
-In the project directory, you can run:
+### Bắt buộc
 
-### `npm start`
+- Node.js: khuyến nghị dùng bản LTS (Node 20+). Node 18+ thường vẫn chạy được, nhưng nên ưu tiên LTS.
+- npm: đi kèm theo Node.js.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Kiểm tra nhanh
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Mở PowerShell tại thư mục `frontend/` và chạy:
 
-### `npm test`
+```bash
+node -v
+npm -v
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 2) Các thư viện đang dùng
 
-### `npm run build`
+Các thư viện chính hiện đang có trong `package.json`:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- `react`, `react-dom`: React 19
+- `vite`, `@vitejs/plugin-react`: dev server + build tool
+- `tailwindcss` (v4), `@tailwindcss/postcss`, `postcss`, `autoprefixer`: Tailwind CSS v4 qua PostCSS
+- `lucide-react`: icon
+- `@testing-library/*`: các thư viện hỗ trợ test UI (hiện dự án chưa cấu hình lại test runner sau khi chuyển sang Vite)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 3) Cài đặt dependencies
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Tại thư mục `frontend/`:
 
-### `npm run eject`
+```bash
+npm install
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Nếu bạn vừa kéo code mới hoặc gặp lỗi lạ, có thể “reset” cài đặt:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+rm -r node_modules
+rm package-lock.json
+npm install
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+(Trên Windows nếu `rm` không có, dùng PowerShell: `Remove-Item -Recurse -Force node_modules` và `Remove-Item package-lock.json`)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 4) Chạy ở chế độ development
 
-## Learn More
+Tại thư mục `frontend/`:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+npm run dev
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Mặc định dev server chạy tại:
 
-### Code Splitting
+- http://localhost:3000
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Lưu ý: cổng 3000 được cấu hình trong `vite.config.js`. Nếu 3000 đang bị chiếm:
 
-### Analyzing the Bundle Size
+- Cách 1: chạy port khác
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+npm run dev -- --port 3001
+```
 
-### Making a Progressive Web App
+- Cách 2: đổi `server.port` trong `vite.config.js`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## 5) Build production
 
-### Advanced Configuration
+```bash
+npm run build
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Output nằm trong thư mục `frontend/dist/`.
 
-### Deployment
+## 6) Chạy thử bản build (preview)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```bash
+npm run preview
+```
 
-### `npm run build` fails to minify
+## 7) Tailwind CSS v4 đang được cấu hình ở đâu?
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- `src/index.css` đang dùng:
+	- `@import "tailwindcss";`
+- `postcss.config.js` đang dùng:
+	- `@tailwindcss/postcss` + `autoprefixer`
+
+## 8) Ghi chú về cấu hình API
+
+Hiện thư mục `src/service/` đang trống và chưa thấy file `.env` trong frontend.
+Nếu sau này bạn muốn cấu hình base URL cho backend bằng biến môi trường, Vite yêu cầu prefix `VITE_`.
+Ví dụ tạo file `.env.local`:
+
+```bash
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+Và trong code đọc bằng `import.meta.env.VITE_API_BASE_URL`.
+
+## 9) Troubleshooting
+
+### Lỗi Tailwind/PostCSS kiểu “trying to use tailwindcss directly as a PostCSS plugin”
+
+Nếu bạn thấy lỗi này thì gần như chắc chắn bạn đang chạy bằng toolchain không tương thích (ví dụ CRA). Dự án này đã chuyển sang Vite để dùng Tailwind v4.
+Hãy đảm bảo bạn chạy `npm run dev` / `npm run build` (Vite), không phải `npm start`.
+
+### Mở trang nhưng không thấy style Tailwind
+
+Kiểm tra:
+
+- `src/index.css` có `@import "tailwindcss";`
+- `src/main.jsx` có import `./index.css`
