@@ -39,11 +39,13 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/welcome").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/companies/search", "/api/companies/nearby", "/api/companies/{companyId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/companies/search", "/api/companies/nearby",
+                                "/api/companies/{companyId}", "/api/companies/{companyId}/services")
+                        .permitAll()
                         .requestMatchers("/error", "/actuator/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
