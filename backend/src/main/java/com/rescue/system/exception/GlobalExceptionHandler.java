@@ -23,6 +23,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(ErrorResponse.of(ex.getStatus().value(), ex.getMessage(), ex.getDetails()));
     }
 
+    @ExceptionHandler(CompanyNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCompanyNotFoundException(CompanyNotFoundException ex) {
+        return ResponseEntity
+                .status(ex.getStatus())
+                .body(ErrorResponse.of(ex.getStatus().value(), ex.getMessage(), List.of()));
+    }
+
+    @ExceptionHandler(InvalidLocationException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidLocationException(InvalidLocationException ex) {
+        return ResponseEntity
+                .status(ex.getStatus())
+                .body(ErrorResponse.of(ex.getStatus().value(), ex.getMessage(), List.of()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnknown(Exception ex) {
         return ResponseEntity
