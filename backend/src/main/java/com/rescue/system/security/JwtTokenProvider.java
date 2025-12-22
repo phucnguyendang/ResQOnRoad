@@ -53,4 +53,31 @@ public class JwtTokenProvider {
             return false;
         }
     }
+
+    public String getUsernameFromToken(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            return claims.getSubject();
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    public Long getUserIdFromToken(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            return claims.get("account_id", Long.class);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    public String getRoleFromToken(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            return claims.get("role", String.class);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
 }
