@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/companies/search", "/api/companies/nearby", "/api/companies/{companyId}").permitAll()
                         .requestMatchers("/error", "/actuator/**").permitAll()
                         .anyRequest().authenticated()
                 )
