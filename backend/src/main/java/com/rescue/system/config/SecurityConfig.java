@@ -71,12 +71,14 @@ public class SecurityConfig {
                     .toList();
             config.setAllowedOrigins(origins);
         } else {
-            config.setAllowedOrigins(List.of());
+            // Default to allow all origins in development
+            config.setAllowedOriginPatterns(List.of("*"));
         }
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
+        config.setExposedHeaders(List.of("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
