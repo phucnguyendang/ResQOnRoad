@@ -9,6 +9,9 @@ import Footer from './components/Footer.jsx';
 import HomeView from './views/HomeView.jsx';
 import LoginView from './views/LoginView.jsx';
 import RegisterView from './views/RegisterView.jsx';
+import RescueRequestCreateView from './views/RescueRequestCreateView.jsx';
+import RescueRequestListView from './views/RescueRequestListView.jsx';
+import RescueRequestTrackView from './views/RescueRequestTrackView.jsx';
 
 import { clearAuth, loadAuth, saveAuth } from './utils/authStorage.js';
 
@@ -61,6 +64,9 @@ function App() {
         {currentView === 'home' && <HomeView onNavigate={handleNavigate} />}
         {currentView === 'login' && <LoginView onNavigate={handleNavigate} onLoginSuccess={handleLoginSuccess} />}
         {currentView === 'register' && <RegisterView onNavigate={handleNavigate} />}
+        {currentView === 'createRequest' && <RescueRequestCreateView onNavigate={handleNavigate} />}
+        {currentView === 'requestList' && <RescueRequestListView onNavigate={handleNavigate} />}
+        {currentView === 'requestDetail' && <RescueRequestTrackView onNavigate={handleNavigate} />}
       </div>
 
       {/* 3. Footer luôn hiển thị */}
