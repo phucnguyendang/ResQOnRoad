@@ -9,9 +9,11 @@ public class CreateRescueRequestDto {
     private String location;
 
     @NotNull(message = "Latitude is required")
+    @Range(min = -90, max = 90, message = "Latitude out of range [-90, 90]")
     private Double latitude;
 
     @NotNull(message = "Longitude is required")
+    @Range(min = -180, max = 180, message = "Longitude out of range [-180, 180]")
     private Double longitude;
 
     private String description;
