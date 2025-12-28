@@ -50,7 +50,15 @@ public class AuthServiceImpl implements AuthService {
         Account account = new Account();
         account.setUsername(request.getUsername());
         account.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        account.setRole(Role.USER);
+        
+        // Set role từ request, mặc định là USER nếu không có
+        String roleStr = request.getRole() != null ? request.getRole().toUpperCase() : "USER";
+        try {
+            account.setRole(Role.valueOf(roleStr));
+        } catch (IllegalArgumentException e) {
+            account.setRole(Role.USER);
+        }
+        
         account.setFullName(request.getFullName());
         account.setPhoneNumber(request.getPhoneNumber());
         account.setEmail(request.getEmail());

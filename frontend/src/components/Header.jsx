@@ -21,6 +21,7 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-6">
           <button onClick={() => onNavigate('home')} className={`hover:text-yellow-400 ${currentView === 'home' ? 'text-yellow-400 font-semibold' : ''}`}>Trang chủ</button>
+          <button onClick={() => onNavigate('search')} className={`hover:text-yellow-400 ${currentView === 'search' ? 'text-yellow-400 font-semibold' : ''}`}>Tìm Kiếm</button>
           <button className="hover:text-yellow-400">Dịch vụ</button>
           <button className="hover:text-yellow-400">Về chúng tôi</button>
         </nav>
@@ -30,6 +31,18 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
           {user ? (
             <div className="flex items-center space-x-2">
               <span className="text-sm">Xin chào, {user.username}</span>
+              {user.role === 'COMPANY' && (
+                <button
+                  onClick={() => onNavigate('company-dashboard')}
+                  className={`px-3 py-1 rounded text-sm ${
+                    currentView === 'company-dashboard'
+                      ? 'bg-yellow-500 text-blue-900 font-semibold'
+                      : 'bg-blue-700 hover:bg-blue-600'
+                  }`}
+                >
+                  Bảng Điều Khiển
+                </button>
+              )}
               <button
                 onClick={onLogout}
                 className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm"
@@ -69,7 +82,11 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
       {isMenuOpen && (
         <div className="md:hidden bg-blue-800 p-4 space-y-3">
           <button onClick={() => { onNavigate('home'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Trang chủ</button>
+          <button onClick={() => { onNavigate('search'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Tìm Kiếm</button>
           <button className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Dịch vụ</button>
+          {user && user.role === 'COMPANY' && (
+            <button onClick={() => { onNavigate('company-dashboard'); setIsMenuOpen(false); }} className="block w-full text-left py-2 bg-yellow-500 text-blue-900 font-semibold px-2 rounded">Bảng Điều Khiển</button>
+          )}
           {user ? (
             <button
               onClick={() => { onLogout(); setIsMenuOpen(false); }}

@@ -27,6 +27,8 @@ public class RegisterRequest {
 
     private String avatarBase64;
 
+    private String role;
+
     public String getUsername() {
         return username;
     }
@@ -73,5 +75,13 @@ public class RegisterRequest {
 
     public void setAvatarBase64(String avatarBase64) {
         this.avatarBase64 = avatarBase64;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

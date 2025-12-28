@@ -17,10 +17,10 @@ const HomeView = ({ onNavigate }) => {
             </p>
             <div className="flex space-x-4">
               <button 
-                onClick={() => alert("Chức năng đang phát triển: Gửi yêu cầu nhanh")}
+                onClick={() => onNavigate('search')}
                 className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 flex items-center"
               >
-                <Phone className="mr-2" /> GỌI CỨU HỘ NGAY
+                <Phone className="mr-2" /> GỌI CỨU Hộ NGAY
               </button>
             </div>
           </div>

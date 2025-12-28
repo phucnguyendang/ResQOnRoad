@@ -9,6 +9,8 @@ import Footer from './components/Footer.jsx';
 import HomeView from './views/HomeView.jsx';
 import LoginView from './views/LoginView.jsx';
 import RegisterView from './views/RegisterView.jsx';
+import SearchMapView from './views/SearchMapView.jsx';
+import CompanyDashboard from './views/CompanyDashboard.jsx';
 
 import { clearAuth, loadAuth, saveAuth } from './utils/authStorage.js';
 
@@ -61,6 +63,8 @@ function App() {
         {currentView === 'home' && <HomeView onNavigate={handleNavigate} />}
         {currentView === 'login' && <LoginView onNavigate={handleNavigate} onLoginSuccess={handleLoginSuccess} />}
         {currentView === 'register' && <RegisterView onNavigate={handleNavigate} />}
+        {currentView === 'search' && <SearchMapView />}
+        {currentView === 'company-dashboard' && <CompanyDashboard />}
       </div>
 
       {/* 3. Footer luôn hiển thị */}

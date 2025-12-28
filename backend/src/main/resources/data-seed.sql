@@ -35,6 +35,24 @@ INSERT INTO rescue_companies (
     description, business_license, is_verified,
     created_at, updated_at
 ) VALUES (
+    0, 'Cuu Ho Ba Dinh 24/7', 
+    'So 123 Duong Hoang Hoa Tham, Ba Dinh, Ha Noi', 
+    '0243123456', 'badinh247@rescue.vn',
+    21.0285, 105.8542, 50.0,
+    1, 4.8, 156,
+    'Chuyen cuu ho o to, xe may 24/7. Doi ngu chuyen nghiep, trang thiet bi hien dai.',
+    'GP-BD-2023-001', 1,
+    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+);
+
+
+INSERT OR REPLACE INTO rescue_companies (
+    id, name, address, phone, email, 
+    latitude, longitude, service_radius, 
+    is_active, average_rating, total_reviews, 
+    description, business_license, is_verified,
+    created_at, updated_at
+) VALUES (
     1, 'Cứu Hộ Ba Đình 24/7', 
     'Số 123 Đường Hoàng Hoa Thám, Ba Đình, Hà Nội', 
     '0243123456', 'badinh247@rescue.vn',
