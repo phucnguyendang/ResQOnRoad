@@ -12,16 +12,15 @@
 
 -- ============================================
 -- INSERT TEST ACCOUNTS (for reviews)
--- Using INSERT OR REPLACE to avoid duplicate key errors on restart
 -- ============================================
 
-INSERT OR REPLACE INTO accounts (id, username, password_hash, full_name, phone_number, email, role, created_at)
+INSERT INTO accounts (id, username, password_hash, full_name, phone_number, email, role, created_at)
 VALUES (1, 'user1', '$2a$10$dummyhashedpassword1', 'Nguyễn Văn A', '0901234567', 'user1@test.com', 'USER', CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO accounts (id, username, password_hash, full_name, phone_number, email, role, created_at)
+INSERT INTO accounts (id, username, password_hash, full_name, phone_number, email, role, created_at)
 VALUES (2, 'user2', '$2a$10$dummyhashedpassword2', 'Trần Thị B', '0901234568', 'user2@test.com', 'USER', CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO accounts (id, username, password_hash, full_name, phone_number, email, role, created_at)
+INSERT INTO accounts (id, username, password_hash, full_name, phone_number, email, role, created_at)
 VALUES (3, 'user3', '$2a$10$dummyhashedpassword3', 'Lê Văn C', '0901234569', 'user3@test.com', 'USER', CURRENT_TIMESTAMP);
 
 -- ============================================
@@ -29,7 +28,7 @@ VALUES (3, 'user3', '$2a$10$dummyhashedpassword3', 'Lê Văn C', '0901234569', '
 -- ============================================
 
 -- Company 1: Cứu hộ Ba Đình (Very close to center)
-INSERT OR REPLACE INTO rescue_companies (
+INSERT INTO rescue_companies (
     id, name, address, phone, email, 
     latitude, longitude, service_radius, 
     is_active, average_rating, total_reviews, 
@@ -47,7 +46,7 @@ INSERT OR REPLACE INTO rescue_companies (
 );
 
 -- Company 2: Cứu hộ Hoàn Kiếm (Near Old Quarter)
-INSERT OR REPLACE INTO rescue_companies (
+INSERT INTO rescue_companies (
     id, name, address, phone, email,
     latitude, longitude, service_radius,
     is_active, average_rating, total_reviews,
@@ -65,7 +64,7 @@ INSERT OR REPLACE INTO rescue_companies (
 );
 
 -- Company 3: Cứu hộ Tây Hồ (West Lake area)
-INSERT OR REPLACE INTO rescue_companies (
+INSERT INTO rescue_companies (
     id, name, address, phone, email,
     latitude, longitude, service_radius,
     is_active, average_rating, total_reviews,
@@ -83,7 +82,7 @@ INSERT OR REPLACE INTO rescue_companies (
 );
 
 -- Company 4: Cứu hộ Cầu Giấy (North area)
-INSERT OR REPLACE INTO rescue_companies (
+INSERT INTO rescue_companies (
     id, name, address, phone, email,
     latitude, longitude, service_radius,
     is_active, average_rating, total_reviews,
@@ -101,7 +100,7 @@ INSERT OR REPLACE INTO rescue_companies (
 );
 
 -- Company 5: Cứu hộ Đống Đa (Central area)
-INSERT OR REPLACE INTO rescue_companies (
+INSERT INTO rescue_companies (
     id, name, address, phone, email,
     latitude, longitude, service_radius,
     is_active, average_rating, total_reviews,
@@ -119,7 +118,7 @@ INSERT OR REPLACE INTO rescue_companies (
 );
 
 -- Company 6: Cứu hộ Long Biên (Far from center - for distance testing)
-INSERT OR REPLACE INTO rescue_companies (
+INSERT INTO rescue_companies (
     id, name, address, phone, email,
     latitude, longitude, service_radius,
     is_active, average_rating, total_reviews,
@@ -137,7 +136,7 @@ INSERT OR REPLACE INTO rescue_companies (
 );
 
 -- Company 7: Cứu hộ Thanh Xuân (South area)
-INSERT OR REPLACE INTO rescue_companies (
+INSERT INTO rescue_companies (
     id, name, address, phone, email,
     latitude, longitude, service_radius,
     is_active, average_rating, total_reviews,
@@ -155,7 +154,7 @@ INSERT OR REPLACE INTO rescue_companies (
 );
 
 -- Company 8: Inactive company (for testing filter)
-INSERT OR REPLACE INTO rescue_companies (
+INSERT INTO rescue_companies (
     id, name, address, phone, email,
     latitude, longitude, service_radius,
     is_active, average_rating, total_reviews,
@@ -177,79 +176,79 @@ INSERT OR REPLACE INTO rescue_companies (
 -- ============================================
 
 -- Services for Company 1 (Ba Đình)
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (1, 'Dịch vụ cẩu xe', 'Cẩu xe ô tô các loại, khoảng cách dưới 50km', 'TOW_TRUCK', 500000, 'VND', 1, 30, 1, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (2, 'Vá lốp tại chỗ', 'Vá lốp xe ô tô, xe máy tại chỗ', 'TIRE_CHANGE', 150000, 'VND', 1, 20, 1, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (3, 'Cứu hộ ắc quy', 'Nổ máy ắc quy, thay ắc quy mới', 'BATTERY_JUMP', 200000, 'VND', 1, 15, 1, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (4, 'Giao nhiên liệu', 'Giao xăng, dầu khẩn cấp', 'FUEL_DELIVERY', 100000, 'VND + giá xăng', 1, 25, 1, CURRENT_TIMESTAMP);
 
 -- Services for Company 2 (Hoàn Kiếm)
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (5, 'Cẩu xe Express', 'Cẩu xe nhanh trong 15 phút', 'TOW_TRUCK', 600000, 'VND', 1, 15, 2, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (6, 'Thay lốp dự phòng', 'Thay lốp dự phòng tại chỗ', 'TIRE_CHANGE', 120000, 'VND', 1, 15, 2, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (7, 'Mở khóa xe', 'Mở khóa ô tô, xe máy khi để quên chìa', 'LOCKOUT', 250000, 'VND', 1, 20, 2, CURRENT_TIMESTAMP);
 
 -- Services for Company 3 (Tây Hồ)
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (8, 'Cẩu xe cao tốc', 'Chuyên cẩu xe trên cao tốc', 'TOW_TRUCK', 800000, 'VND', 1, 40, 3, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (9, 'Kéo xe sa lầy', 'Kéo xe bị sa lầy, kẹt bánh', 'WINCH_OUT', 400000, 'VND', 1, 35, 3, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (10, 'Sửa chữa cơ bản', 'Sửa chữa hệ thống điện, nước, phanh cơ bản', 'MECHANICAL_REPAIR', 300000, 'VND', 1, 45, 3, CURRENT_TIMESTAMP);
 
 -- Services for Company 4 (Cầu Giấy)
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (11, 'Cẩu xe Premium', 'Dịch vụ cẩu xe cao cấp, xe chuyên dụng', 'TOW_TRUCK', 1000000, 'VND', 1, 25, 4, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (12, 'Cứu hộ tai nạn', 'Xử lý hiện trường tai nạn, cẩu xe hư hỏng', 'ACCIDENT_RECOVERY', 1500000, 'VND', 1, 60, 4, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (13, 'Vá lốp Premium', 'Vá lốp chuyên nghiệp, bảo hành 3 tháng', 'TIRE_CHANGE', 200000, 'VND', 1, 25, 4, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (14, 'Thay ắc quy mới', 'Thay ắc quy chính hãng, bảo hành 12 tháng', 'BATTERY_JUMP', 800000, 'VND', 1, 20, 4, CURRENT_TIMESTAMP);
 
 -- Services for Company 5 (Đống Đa)
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (15, 'Cẩu xe giá rẻ', 'Cẩu xe giá cả phải chăng', 'TOW_TRUCK', 400000, 'VND', 1, 35, 5, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (16, 'Vá lốp nhanh', 'Vá lốp nhanh trong 10 phút', 'TIRE_CHANGE', 100000, 'VND', 1, 10, 5, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (17, 'Nổ máy ắc quy', 'Nổ máy khi hết ắc quy', 'BATTERY_JUMP', 150000, 'VND', 1, 15, 5, CURRENT_TIMESTAMP);
 
 -- Services for Company 6 (Long Biên)
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (18, 'Cẩu xe đường dài', 'Chuyên cẩu xe đường dài, liên tỉnh', 'TOW_TRUCK', 1200000, 'VND', 1, 90, 6, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (19, 'Giao xăng tận nơi', 'Giao xăng khẩn cấp khu vực xa', 'FUEL_DELIVERY', 150000, 'VND + giá xăng', 1, 40, 6, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (20, 'Kéo xe container', 'Chuyên kéo xe tải, container', 'WINCH_OUT', 2000000, 'VND', 1, 120, 6, CURRENT_TIMESTAMP);
 
 -- Services for Company 7 (Thanh Xuân)
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (21, 'Cẩu xe tiêu chuẩn', 'Dịch vụ cẩu xe tiêu chuẩn', 'TOW_TRUCK', 550000, 'VND', 1, 30, 7, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (22, 'Vá lốp ô tô', 'Vá lốp ô tô 4-7 chỗ', 'TIRE_CHANGE', 130000, 'VND', 1, 20, 7, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
+INSERT INTO services (id, name, description, type, base_price, price_unit, is_available, estimated_time, company_id, created_at)
 VALUES (23, 'Sửa chữa tại chỗ', 'Sửa chữa nhỏ tại chỗ', 'MECHANICAL_REPAIR', 250000, 'VND', 1, 40, 7, CURRENT_TIMESTAMP);
 
 -- ============================================
@@ -258,55 +257,55 @@ VALUES (23, 'Sửa chữa tại chỗ', 'Sửa chữa nhỏ tại chỗ', 'MECHA
 -- ============================================
 
 -- Reviews for Company 1 (Ba Đình)
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (1, 1, 1, 5, 'Dịch vụ tuyệt vời! Đến rất nhanh và giá cả hợp lý. Nhân viên thân thiện.', 1, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (2, 2, 1, 5, 'Cảm ơn anh tài xế! Giúp tôi trong lúc khó khăn. Rất chuyên nghiệp.', 1, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (3, 3, 1, 4, 'Tốt, nhưng phải chờ hơi lâu. Tổng thể là ổn.', 1, CURRENT_TIMESTAMP);
 
 -- Reviews for Company 2 (Hoàn Kiếm)
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (4, 1, 2, 5, 'Express thật sự! 15 phút đã có xe đến. Đáng đồng tiền.', 1, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (5, 2, 2, 4, 'Tốt, phục vụ nhanh nhưng giá hơi cao.', 1, CURRENT_TIMESTAMP);
 
 -- Reviews for Company 3 (Tây Hồ)
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (6, 3, 3, 5, 'Xe cẩu chuyên dụng, kéo xe container của tôi rất chuyên nghiệp.', 1, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (7, 1, 3, 4, 'Dịch vụ tốt, nhân viên nhiệt tình. Giá cả hợp lý.', 1, CURRENT_TIMESTAMP);
 
 -- Reviews for Company 4 (Cầu Giấy)
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (8, 2, 4, 5, 'Dịch vụ Premium thật sự xứng đáng! Chất lượng tuyệt vời.', 1, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (9, 3, 4, 5, 'Bảo hành dịch vụ rất tốt. Sẽ sử dụng lại.', 1, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (10, 1, 4, 5, 'Tốt nhất trong khu vực! Đội ngũ chuyên nghiệp.', 1, CURRENT_TIMESTAMP);
 
 -- Reviews for Company 5 (Đống Đa)
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (11, 2, 5, 4, 'Giá rẻ, chất lượng tạm ổn. Phù hợp với túi tiền sinh viên.', 1, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (12, 3, 5, 4, 'Dịch vụ nhanh, giá cả phải chăng.', 1, CURRENT_TIMESTAMP);
 
 -- Reviews for Company 6 (Long Biên)
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (13, 1, 6, 5, 'Cẩu xe từ Hà Nội về Hải Phòng rất chuyên nghiệp. Tuyệt vời!', 1, CURRENT_TIMESTAMP);
 
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (14, 2, 6, 4, 'Dịch vụ tốt cho đường dài, giá hơi cao nhưng chất lượng.', 1, CURRENT_TIMESTAMP);
 
 -- Reviews for Company 7 (Thanh Xuân)
-INSERT OR REPLACE INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
+INSERT INTO reviews (id, user_id, company_id, rating, comment, is_verified, created_at)
 VALUES (15, 3, 7, 4, 'Dịch vụ ổn định, luôn sẵn sàng phục vụ.', 1, CURRENT_TIMESTAMP);
 
 -- ============================================
