@@ -1,2 +1,2 @@
 -- SQLite
-SELECT id, username FROM accounts
+SELECT * FROM rescue_requests
