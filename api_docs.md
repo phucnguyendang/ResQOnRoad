@@ -313,31 +313,118 @@ Dựa trên bảng `BinhLuan` .
 
 ### 6.1. Gửi tin nhắn (Send Message)
 
-Dựa trên Use Case 101 và bảng `TinNhan` .
+Dựa trên Use Case 101 (UC101) và backend hiện tại (MessageController).
 
-* **Endpoint:** `POST /messages`
+Lưu ý:
+- Backend đang dùng context-path `/v1` và route prefix `/api/messages`.
+- Backend **không cần** `receiver_id` trong request; hệ thống tự xác định người nhận dựa trên `requestId` và hội thoại (Conversation).
+
+#### 6.1.1. Truy cập/Tạo hội thoại theo yêu cầu cứu hộ
+
+* **Endpoint:** `POST /api/messages/conversation/{requestId}`
+* **Header:** `Authorization: Bearer {token}`
+* **Response (200 OK):**
+```json
+{
+  "code": 200,
+  "message": "Truy cập cuộc hội thoại thành công",
+  "data": {
+    "id": 10,
+    "requestId": 1001,
+    "userId": 101,
+    "userName": "Nguyễn Văn A",
+    "companyId": 50,
+    "companyName": "Cứu hộ Ba Đình",
+    "startedAt": "2025-11-20T10:00:00Z",
+    "endedAt": null,
+    "status": "ACTIVE",
+    "agreedCost": null,
+    "costNotes": null,
+    "unreadCount": 0,
+    "messages": []
+  }
+}
+```
+
+#### 6.1.2. Lấy lịch sử tin nhắn theo yêu cầu cứu hộ
+
+* **Endpoint:** `GET /api/messages/{requestId}`
+* **Header:** `Authorization: Bearer {token}`
+* **Response (200 OK):**
+```json
+{
+  "code": 200,
+  "message": "Lấy lịch sử tin nhắn thành công",
+  "data": {
+    "id": 10,
+    "requestId": 1001,
+    "userId": 101,
+    "companyId": 50,
+    "status": "ACTIVE",
+    "unreadCount": 1,
+    "messages": [
+      {
+        "id": 99,
+        "conversationId": 10,
+        "senderId": 101,
+        "senderName": "Nguyễn Văn A",
+        "senderRole": "USER",
+        "content": "Tôi đang đứng ở gốc cây to đối diện số nhà.",
+        "sentAt": "2025-11-20T10:15:00Z",
+        "isRead": false,
+        "attachmentUrl": null,
+        "attachmentType": null
+      }
+    ]
+  }
+}
+```
+
+#### 6.1.3. Gửi tin nhắn
+
+* **Endpoint:** `POST /api/messages`
+* **Header:** `Authorization: Bearer {token}`
 * **Request Body:**
 ```json
 {
-  "request_id": 1001, // Gắn liền với một yêu cầu cứu hộ cụ thể
-  "receiver_id": 50,  // ID người nhận
-  "content": "Tôi đang đứng ở gốc cây to đối diện số nhà."
+  "requestId": 1001,
+  "content": "Tôi đang đứng ở gốc cây to đối diện số nhà.",
+  "attachmentUrl": null,
+  "attachmentType": null
 }
-
 ```
-
 
 * **Response (201 Created):**
 ```json
 {
+  "code": 201,
+  "message": "Tin nhắn đã được gửi thành công",
   "data": {
     "id": 99,
-    "content": "Tôi đang đứng ở gốc cây to...",
-    "sent_at": "2025-11-20T10:15:00Z",
-    "is_read": false
+    "conversationId": 10,
+    "senderId": 101,
+    "senderName": "Nguyễn Văn A",
+    "senderRole": "USER",
+    "content": "Tôi đang đứng ở gốc cây to đối diện số nhà.",
+    "sentAt": "2025-11-20T10:15:00Z",
+    "isRead": false,
+    "attachmentUrl": null,
+    "attachmentType": null
   }
 }
+```
 
+#### 6.1.4. (Tuỳ chọn) Đánh dấu đã đọc
+
+* **Endpoint:** `PUT /api/messages/{conversationId}/read`
+* **Header:** `Authorization: Bearer {token}`
+* **Response (200 OK):**
+```json
+{
+  "code": 200,
+  "message": "Đã đánh dấu 3 tin nhắn đã đọc",
+  "data": 3
+}
 ```
 
 
