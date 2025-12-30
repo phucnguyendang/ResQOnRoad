@@ -127,6 +127,68 @@ Dựa trên Use Case 202 . API trả về danh sách công ty kèm khoảng các
 
 ---
 
+## 3.2. Đánh giá công ty cứu hộ (Review & Rating)
+
+Hiện tại backend đã có model `Review` và hiển thị rating trung bình trong tìm kiếm công ty. Để phục vụ chức năng người dùng đánh giá sau khi hoàn thành yêu cầu cứu hộ, cần các API sau.
+
+### 3.2.1. Tạo/Cập nhật đánh giá theo yêu cầu cứu hộ
+
+Chỉ cho phép khi yêu cầu cứu hộ đã ở trạng thái `COMPLETED`.
+
+* **Endpoint:** `POST /api/reviews`
+* **Header:** `Authorization: Bearer {token}`
+* **Request Body:**
+```json
+{
+  "requestId": 1001,
+  "rating": 5,
+  "comment": "Tới nhanh, xử lý chuyên nghiệp."
+}
+```
+
+* **Response (201 Created):**
+```json
+{
+  "code": 201,
+  "message": "Gửi đánh giá thành công",
+  "data": {
+    "id": 501,
+    "userName": "Nguyễn Văn A",
+    "rating": 5,
+    "comment": "Tới nhanh, xử lý chuyên nghiệp.",
+    "isVerified": true,
+    "createdAt": "2025-11-20T12:00:00Z"
+  }
+}
+```
+
+### 3.2.2. (Tuỳ chọn) Lấy danh sách đánh giá của công ty
+
+* **Endpoint:** `GET /api/companies/{companyId}/reviews?page=1&limit=10`
+* **Response (200 OK):**
+```json
+{
+  "code": 200,
+  "message": "Lấy danh sách đánh giá thành công",
+  "data": {
+    "items": [
+      {
+        "id": 501,
+        "userName": "Nguyễn Văn A",
+        "rating": 5,
+        "comment": "Tới nhanh, xử lý chuyên nghiệp.",
+        "isVerified": true,
+        "createdAt": "2025-11-20T12:00:00Z"
+      }
+    ],
+    "pagination": {
+      "current_page": 1,
+      "total_pages": 1
+    }
+  }
+}
+```
+
 ## 4. Module Yêu cầu Cứu hộ (Rescue Request) - Core Feature
 
 ### 4.1. Tạo yêu cầu cứu hộ (Create Request)
