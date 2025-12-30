@@ -39,7 +39,7 @@ public class CompanyProfileController {
      * UC404 - Step 2: Get current company profile
      * GET /api/companies/profile
      * 
-     * Hiển thị hồ sơ hiện tại của công ty: tên doanh nghiệp, MST, địa chỉ, 
+     * Hiển thị hồ sơ hiện tại của công ty: tên doanh nghiệp, MST, địa chỉ,
      * giấy phép, thông tin liên hệ, dịch vụ cung cấp, phạm vi hoạt động...
      */
     @GetMapping("/profile")
@@ -53,13 +53,12 @@ public class CompanyProfileController {
             ApiResponse<CompanyProfileDto> response = new ApiResponse<>(
                     HttpStatus.OK.value(),
                     "Lấy thông tin hồ sơ công ty thành công",
-                    result
-            );
+                    result);
             return ResponseEntity.ok(response);
         } catch (ApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, 
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Lỗi khi lấy thông tin hồ sơ: " + e.getMessage());
         }
     }
@@ -95,13 +94,12 @@ public class CompanyProfileController {
             ApiResponse<CompanyProfileDto> response = new ApiResponse<>(
                     HttpStatus.OK.value(),
                     message,
-                    result
-            );
+                    result);
             return ResponseEntity.ok(response);
         } catch (ApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, 
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Lỗi khi cập nhật hồ sơ: " + e.getMessage());
         }
     }
@@ -121,13 +119,12 @@ public class CompanyProfileController {
             ApiResponse<CompanyProfileDto> response = new ApiResponse<>(
                     HttpStatus.OK.value(),
                     "Lấy thông tin hồ sơ công ty thành công",
-                    result
-            );
+                    result);
             return ResponseEntity.ok(response);
         } catch (ApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, 
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Lỗi khi lấy thông tin hồ sơ: " + e.getMessage());
         }
     }

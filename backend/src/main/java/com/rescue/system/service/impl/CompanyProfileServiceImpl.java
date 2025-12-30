@@ -37,8 +37,7 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
 
     // Fields that require admin approval when changed
     private static final List<String> APPROVAL_REQUIRED_FIELDS = List.of(
-            "businessLicense", "taxCode", "name", "licenseDocumentUrl"
-    );
+            "businessLicense", "taxCode", "name", "licenseDocumentUrl");
 
     @Override
     @Transactional(readOnly = true)
@@ -92,15 +91,15 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
 
         // Validate license if provided
         if (request.getBusinessLicense() != null || request.getLicenseExpiryDate() != null) {
-            String license = request.getBusinessLicense() != null 
-                    ? request.getBusinessLicense() 
+            String license = request.getBusinessLicense() != null
+                    ? request.getBusinessLicense()
                     : company.getBusinessLicense();
-            LocalDateTime expiryDate = request.getLicenseExpiryDate() != null 
-                    ? request.getLicenseExpiryDate() 
+            LocalDateTime expiryDate = request.getLicenseExpiryDate() != null
+                    ? request.getLicenseExpiryDate()
                     : company.getLicenseExpiryDate();
 
             if (!validateLicense(license, expiryDate)) {
-                throw new ApiException(HttpStatus.BAD_REQUEST, 
+                throw new ApiException(HttpStatus.BAD_REQUEST,
                         "Giấy phép không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại thông tin.");
             }
         }
@@ -130,7 +129,7 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
 
         // Return updated profile
         CompanyProfileDto result = convertToCompanyProfileDto(company);
-        
+
         return result;
     }
 
@@ -157,25 +156,25 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         // Check if any approval-required fields are being changed
 
         // Business license change
-        if (request.getBusinessLicense() != null && 
+        if (request.getBusinessLicense() != null &&
                 !request.getBusinessLicense().equals(currentProfile.getBusinessLicense())) {
             return true;
         }
 
         // Tax code change
-        if (request.getTaxCode() != null && 
+        if (request.getTaxCode() != null &&
                 !request.getTaxCode().equals(currentProfile.getTaxCode())) {
             return true;
         }
 
         // Company name change
-        if (request.getName() != null && 
+        if (request.getName() != null &&
                 !request.getName().equals(currentProfile.getName())) {
             return true;
         }
 
         // License document change
-        if (request.getLicenseDocumentUrl() != null && 
+        if (request.getLicenseDocumentUrl() != null &&
                 !request.getLicenseDocumentUrl().equals(currentProfile.getLicenseDocumentUrl())) {
             return true;
         }
