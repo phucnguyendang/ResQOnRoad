@@ -42,8 +42,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/welcome").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/companies/search", "/api/companies/nearby",
-                                "/api/companies/{companyId}", "/api/companies/{companyId}/services")
+                                "/api/companies/{companyId}", "/api/companies/{companyId}/services",
+                                "/api/companies/{companyId}/profile")
                         .permitAll()
+                        .requestMatchers("/api/debug/**").permitAll()
                         .requestMatchers("/error", "/actuator/**").permitAll()
                         .requestMatchers("/api/users/profile").hasRole("USER")
                         .anyRequest().authenticated())

@@ -23,10 +23,7 @@ public class RegisterRequest {
     private String fullName;
 
     @NotBlank(message = "Số điện thoại không được để trống")
-    @Pattern(
-        regexp = "^(0[0-9]{9, 10})$",
-        message = "Số điện thoại phải bắt đầu bằng 0 và có 10 hoặc 11 chữ số"
-    )
+    @Pattern(regexp = "^0[0-9]{9,10}$", message = "Số điện thoại phải bắt đầu bằng 0 và có 10 hoặc 11 chữ số")
     private String phoneNumber;
 
     @Email(message = "Email không hợp lệ")
