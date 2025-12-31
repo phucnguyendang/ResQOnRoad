@@ -181,16 +181,16 @@ public class RescueRequestController {
      */
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('COMPANY')")
-    public ResponseEntity<ApiResponse<RescueRequestDto>> updateRescueRequestStatus(
+    public ResponseEntity<ApiResponse<Object>> updateRescueRequestStatus(
             @PathVariable Long id,
             @Valid @RequestBody UpdateRescueStatusDto statusDto,
             @RequestHeader("Authorization") String token) {
         try {
             Long companyId = getUserIdFromToken(token);
-            RescueRequestDto result = rescueRequestService.updateRescueRequestStatus(id, companyId, statusDto);
+            Object result = rescueRequestService.updateRescueRequestStatusWithHistory(id, companyId, statusDto);
             
-            ApiResponse<RescueRequestDto> response = new ApiResponse<>(
-                    "Trạng thái yêu cầu cứu hộ đã được cập nhật thành công",
+            ApiResponse<Object> response = new ApiResponse<>(
+                    "Cập nhật trạng thái yêu cầu cứu hộ đã được cập nhật thành công",
                     result
             );
             return ResponseEntity.ok(response);

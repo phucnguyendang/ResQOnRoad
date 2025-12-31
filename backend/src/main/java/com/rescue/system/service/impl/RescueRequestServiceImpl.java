@@ -4,6 +4,7 @@ import com.rescue.system.dto.request.CreateRescueRequestDto;
 import com.rescue.system.dto.request.RejectRescueRequestDto;
 import com.rescue.system.dto.request.UpdateRescueStatusDto;
 import com.rescue.system.dto.response.RescueRequestDto;
+import com.rescue.system.dto.response.UpdateRescueStatusResponseDto;
 import com.rescue.system.entity.Account;
 import com.rescue.system.entity.RescueRequest;
 import com.rescue.system.entity.RescueStatus;
@@ -187,8 +188,8 @@ public class RescueRequestServiceImpl implements RescueRequestService {
         RescueStatusHistory history = new RescueStatusHistory(
                 updatedRequest, previousStatus, newStatus, "COMPANY_" + companyId
         );
-        if (statusDto.getReason() != null) {
-            history.setReason(statusDto.getReason());
+        if (statusDto.getNote() != null) {
+            history.setReason(statusDto.getNote());
         }
         statusHistoryRepository.save(history);
 
@@ -279,6 +280,78 @@ public class RescueRequestServiceImpl implements RescueRequestService {
         // }
 
         return new RescueRequestDto(updatedRequest);
+    }
+
+    @Override
+    @Transactional
+    public UpdateRescueStatusResponseDto updateRescueRequestStatusWithHistory(Long requestId, Long companyId, UpdateRescueStatusDto statusDto) {
+        RescueRequest rescueRequest = rescueRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Rescue request not found"));
+
+        // Verify company owns this request
+        if (rescueRequest.getCompany() == null || !rescueRequest.getCompany().getId().equals(companyId)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Company does not own this rescue request");
+        }
+
+        // Check if request is in a cancelled state
+        if (rescueRequest.getStatus() == RescueStatus.CANCELLED_BY_USER) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Yêu cầu đã bị người dùng hủy — không thể cập nhật");
+        }
+
+        // Check if request is in a rejected state
+        if (rescueRequest.getStatus() == RescueStatus.REJECTED_BY_COMPANY) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Yêu cầu đã bị từ chối — không thể cập nhật");
+        }
+
+        // Check if request is already completed
+        if (rescueRequest.getStatus() == RescueStatus.COMPLETED) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Yêu cầu đã hoàn thành — không thể cập nhật");
+        }
+
+        // Parse new status
+        RescueStatus newStatus;
+        try {
+            newStatus = RescueStatus.valueOf(statusDto.getStatus());
+        } catch (IllegalArgumentException e) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid status: " + statusDto.getStatus());
+        }
+
+        // Validate status transition
+        if (!isValidStatusTransition(rescueRequest.getStatus(), newStatus)) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid status transition from " + rescueRequest.getStatus() + " to " + newStatus
+            );
+        }
+
+        RescueStatus previousStatus = rescueRequest.getStatus();
+        rescueRequest.setStatus(newStatus);
+        rescueRequest.setUpdatedAt(Instant.now());
+
+        // If status is COMPLETED, set completedAt timestamp
+        if (newStatus == RescueStatus.COMPLETED) {
+            rescueRequest.setCompletedAt(Instant.now());
+        }
+
+        RescueRequest updatedRequest = rescueRequestRepository.save(rescueRequest);
+
+        // Record status history
+        RescueStatusHistory history = new RescueStatusHistory(
+                updatedRequest, previousStatus, newStatus, "COMPANY_" + companyId
+        );
+        if (statusDto.getNote() != null) {
+            history.setReason(statusDto.getNote());
+        }
+        statusHistoryRepository.save(history);
+
+        // Get all status history for this request
+        List<RescueStatusHistory> allHistory = statusHistoryRepository.findByRescueRequestIdOrderByChangedAtDesc(requestId);
+
+        // TODO: Send real-time notification to user
+        // notificationService.notifyUserRealtime(rescueRequest.getUser().getId(),
+        //     "Trạng thái yêu cầu cứu hộ: " + newStatus.getDisplayName());
+
+        return new UpdateRescueStatusResponseDto(updatedRequest, allHistory);
     }
 
     @Override
