@@ -1,2 +1,2 @@
 -- SQLite
-SELECT * FROM rescue_companies
+SELECT * FROM accounts
