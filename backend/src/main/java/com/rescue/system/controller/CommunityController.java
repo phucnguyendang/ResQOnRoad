@@ -481,6 +481,6 @@ public class CommunityController {
         if (token != null && token.startsWith("Bearer ")) {
             token = token.substring(7);
         }
-        return jwtTokenProvider.getUserIdFromJWT(token);
+        return jwtTokenProvider.getUserIdFromToken(token);
     }
 }
