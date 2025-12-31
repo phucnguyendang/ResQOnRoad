@@ -1,7 +1,7 @@
 import { apiRequest } from './apiClient';
 
 export async function login({ username, password }) {
-  const res = await apiRequest('/auth/login', {
+  const res = await apiRequest('/api/auth/login', {
     method: 'POST',
     body: { username, password },
   });
@@ -18,7 +18,7 @@ export async function register({
   avatarBase64,
   role,
 }) {
-  const res = await apiRequest('/auth/register', {
+  const res = await apiRequest('/api/auth/register', {
     method: 'POST',
     body: {
       username,

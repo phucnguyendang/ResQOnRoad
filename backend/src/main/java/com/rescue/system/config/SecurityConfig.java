@@ -42,9 +42,18 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/welcome").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/companies/search", "/api/companies/nearby",
-                                "/api/companies/{companyId}", "/api/companies/{companyId}/services")
+                                "/api/companies/{companyId}", "/api/companies/{companyId}/services",
+                                "/api/companies/{companyId}/profile")
                         .permitAll()
+                        // UC103: Community Support - Public read access
+                        .requestMatchers(HttpMethod.GET, "/api/community/posts", "/api/community/posts/{id}",
+                                "/api/community/posts/{id}/comments", "/api/community/posts/{id}/comments/helpful",
+                                "/api/community/posts/search", "/api/community/posts/nearby",
+                                "/api/community/posts/unresolved", "/api/community/posts/popular")
+                        .permitAll()
+                        .requestMatchers("/api/debug/**").permitAll()
                         .requestMatchers("/error", "/actuator/**").permitAll()
+                        .requestMatchers("/api/users/profile").hasRole("USER")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -71,12 +80,14 @@ public class SecurityConfig {
                     .toList();
             config.setAllowedOrigins(origins);
         } else {
-            config.setAllowedOrigins(List.of());
+            // Default to allow all origins in development
+            config.setAllowedOriginPatterns(List.of("*"));
         }
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
+        config.setExposedHeaders(List.of("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
