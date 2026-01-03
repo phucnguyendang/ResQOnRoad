@@ -1,18 +1,7 @@
 #!/bin/bash
 
-################################################################################
 # UC102 - Review and Feedback Feature - Unified Test Suite
-# 
-# Tệp này tổng hợp tất cả test scripts và documentation cho UC102
-# 
-# Usage:
-#   bash test_uc102.sh                 # Run interactive menu
-#   bash test_uc102.sh quick           # Quick tests only
-#   bash test_uc102.sh full            # All tests
-#   bash test_uc102.sh api             # API integration tests
-#   bash test_uc102.sh verify          # Component verification
-#   bash test_uc102.sh docs            # Show documentation
-################################################################################
+
 
 BASE_URL="http://localhost:8080/api"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
