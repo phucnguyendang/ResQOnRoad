@@ -17,5 +17,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     List<Review> findByUserId(Long userId);
 
+    List<Review> findByUserIdAndCompanyId(Long userId, Long companyId);
+
     boolean existsByUserIdAndCompanyId(Long userId, Long companyId);
 }

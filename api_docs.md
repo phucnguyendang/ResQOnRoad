@@ -149,7 +149,7 @@ Chỉ cho phép khi yêu cầu cứu hộ đã ở trạng thái `COMPLETED`.
 * **Response (201 Created):**
 ```json
 {
-  "code": 201,
+  "status": 201,
   "message": "Gửi đánh giá thành công",
   "data": {
     "id": 501,
@@ -162,13 +162,12 @@ Chỉ cho phép khi yêu cầu cứu hộ đã ở trạng thái `COMPLETED`.
 }
 ```
 
-### 3.2.2. (Tuỳ chọn) Lấy danh sách đánh giá của công ty
+### 3.2.2. Lấy danh sách đánh giá của công ty
 
 * **Endpoint:** `GET /api/companies/{companyId}/reviews?page=1&limit=10`
 * **Response (200 OK):**
 ```json
 {
-  "code": 200,
   "message": "Lấy danh sách đánh giá thành công",
   "data": {
     "items": [
@@ -183,8 +182,59 @@ Chỉ cho phép khi yêu cầu cứu hộ đã ở trạng thái `COMPLETED`.
     ],
     "pagination": {
       "current_page": 1,
-      "total_pages": 1
+      "total_pages": 1,
+      "total_items": 1
     }
+  }
+}
+```
+
+### 3.2.3. Lấy điểm đánh giá trung bình của công ty
+
+* **Endpoint:** `GET /api/companies/{companyId}/rating`
+* **Response (200 OK):**
+```json
+{
+  "message": "Lấy điểm đánh giá thành công",
+  "data": {
+    "company_id": 50,
+    "rating_avg": 4.6
+  }
+}
+```
+
+### 3.2.4. Lấy danh sách đánh giá của người dùng hiện tại
+
+* **Endpoint:** `GET /api/reviews/my-reviews`
+* **Header:** `Authorization: Bearer {token}`
+* **Response (200 OK):**
+```json
+{
+  "message": "Lấy danh sách đánh giá của bạn thành công",
+  "data": [
+    {
+      "id": 501,
+      "userName": "Nguyễn Văn A",
+      "rating": 5,
+      "comment": "Tới nhanh, xử lý chuyên nghiệp.",
+      "isVerified": true,
+      "createdAt": "2025-11-20T12:00:00Z"
+    }
+  ]
+}
+```
+
+### 3.2.5. Kiểm tra xem người dùng đã đánh giá công ty
+
+* **Endpoint:** `GET /api/reviews/check?companyId={companyId}`
+* **Header:** `Authorization: Bearer {token}`
+* **Response (200 OK):**
+```json
+{
+  "message": "Kiểm tra trạng thái đánh giá thành công",
+  "data": {
+    "company_id": 50,
+    "has_reviewed": true
   }
 }
 ```
