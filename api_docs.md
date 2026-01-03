@@ -417,8 +417,6 @@ Dựa trên bảng `BinhLuan` .
 
 ```
 
-
-
 ---
 
 ## 6. Module Tin nhắn (Chat)
@@ -479,3 +477,179 @@ Hệ thống sử dụng các mã lỗi HTTP tiêu chuẩn.
 * **401 Unauthorized:** Token không hợp lệ hoặc hết hạn.
 * **403 Forbidden:** Không có quyền thực hiện hành động (VD: User thường cố gắng xóa bài đăng của người khác).
 * **404 Not Found:** Không tìm thấy tài nguyên (VD: ID công ty không tồn tại).
+
+---
+
+## 8. Hướng dẫn sử dụng UC102 (Review & Feedback)
+
+### Frontend Integration
+
+#### 1. Sử dụng ReviewForm Component
+
+```jsx
+import ReviewForm from './components/ReviewForm';
+
+function RescueRequestDetailView() {
+  const [rescueRequest, setRescueRequest] = useState(null);
+
+  const handleReviewSuccess = (review) => {
+    console.log('Review submitted:', review);
+    // Có thể update UI hoặc chuyển hướng người dùng
+  };
+
+  if (rescueRequest?.status === 'COMPLETED') {
+    return (
+      <div>
+        <ReviewForm
+          requestId={rescueRequest.id}
+          companyName={rescueRequest.company.name}
+          onSuccess={handleReviewSuccess}
+          onCancel={() => console.log('User skipped review')}
+        />
+      </div>
+    );
+  }
+
+  return <div>Request is not completed yet</div>;
+}
+```
+
+#### 2. Sử dụng ReviewList Component
+
+```jsx
+import ReviewList from './components/ReviewList';
+
+function CompanyDetailView() {
+  const companyId = 50; // Lấy từ URL hoặc props
+
+  return (
+    <div>
+      <ReviewList
+        companyId={companyId}
+        companyName="Cứu hộ Ba Đình"
+      />
+    </div>
+  );
+}
+```
+
+#### 3. Sử dụng reviewService
+
+```javascript
+import reviewService from './service/reviewService';
+
+// Tạo/Cập nhật đánh giá
+async function submitReview() {
+  try {
+    const response = await reviewService.createOrUpdateReview(
+      1001,  // requestId
+      5,     // rating (1-5)
+      'Tới nhanh, xử lý chuyên nghiệp.'  // comment
+    );
+    console.log('Review submitted:', response.data.data);
+  } catch (error) {
+    console.error('Error:', error.response.data.message);
+  }
+}
+
+// Lấy danh sách đánh giá của công ty
+async function getCompanyReviews() {
+  try {
+    const response = await reviewService.getCompanyReviews(
+      50,   // companyId
+      1,    // page (optional, default 1)
+      10    // limit (optional, default 10)
+    );
+    console.log('Reviews:', response.data.data.items);
+    console.log('Pagination:', response.data.data.pagination);
+  } catch (error) {
+    console.error('Error:', error.response.data.message);
+  }
+}
+
+// Lấy điểm đánh giá trung bình
+async function getAverageRating() {
+  try {
+    const response = await reviewService.getCompanyAverageRating(50);
+    console.log('Average rating:', response.data.data.rating_avg);
+  } catch (error) {
+    console.error('Error:', error.response.data.message);
+  }
+}
+
+// Lấy danh sách đánh giá của người dùng
+async function getUserReviews() {
+  try {
+    const response = await reviewService.getUserReviews();
+    console.log('My reviews:', response.data.data);
+  } catch (error) {
+    console.error('Error:', error.response.data.message);
+  }
+}
+
+// Kiểm tra xem người dùng đã đánh giá công ty này chưa
+async function checkIfReviewed() {
+  try {
+    const response = await reviewService.checkIfReviewed(50);
+    console.log('Has reviewed:', response.data.data.has_reviewed);
+  } catch (error) {
+    console.error('Error:', error.response.data.message);
+  }
+}
+```
+
+### Backend Requirements
+
+#### Tiền điều kiện
+- Yêu cầu cứu hộ phải có status = `COMPLETED`
+- Người dùng phải đã đăng nhập (có token JWT hợp lệ)
+- Yêu cầu cứu hộ phải được gán cho một công ty
+
+#### Xử lý lỗi
+- `400 Bad Request`: Yêu cầu chưa hoàn thành hoặc dữ liệu không hợp lệ
+- `401 Unauthorized`: Token không hợp lệ
+- `403 Forbidden`: Người dùng không phải là người tạo yêu cầu
+- `404 Not Found`: Không tìm thấy yêu cầu, người dùng hoặc công ty
+
+#### Thông tin được lưu trữ
+- **Rating:** 1-5 sao
+- **Comment:** Tối đa 1000 ký tự
+- **isVerified:** `true` nếu là đánh giá từ hệ thống (tự động xác thực)
+- **createdAt:** Thời gian tạo đánh giá (tự động sinh)
+
+#### Cập nhật điểm đánh giá công ty
+- Khi tạo/cập nhật đánh giá, điểm trung bình của công ty sẽ được tự động tính toán
+- Điểm trung bình được tính từ tất cả đánh giá của công ty
+- Endpoint `GET /api/companies/{companyId}/rating` sẽ trả về điểm cập nhật nhất
+
+### Data Flow
+
+```
+User completes rescue request (Status = COMPLETED)
+           ↓
+Frontend shows ReviewForm component
+           ↓
+User provides rating (1-5 stars) and optional comment
+           ↓
+User clicks "Gửi đánh giá"
+           ↓
+POST /api/reviews (with token)
+           ↓
+Backend validates:
+  - User is logged in
+  - Request exists and is COMPLETED
+  - User is the one who created the request
+           ↓
+Backend saves review and updates company's average rating
+           ↓
+Return ReviewDetail with id, rating, comment, etc.
+           ↓
+Frontend shows success message
+```
+
+### Admin Features
+
+Admin có thể:
+- Xem tất cả đánh giá của tất cả công ty qua đó
+- Phân tích phản hồi để cải thiện dịch vụ
+- Theo dõi điểm đánh giá trung bình của từng công ty
