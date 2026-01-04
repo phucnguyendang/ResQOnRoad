@@ -46,6 +46,9 @@ public class Account {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
+    @Column(name = "locked", nullable = false)
+    private boolean locked = false;
+
     public Long getId() {
         return id;
     }
@@ -124,5 +127,13 @@ public class Account {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 }
