@@ -2,6 +2,8 @@ package com.rescue.system.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 
 public class CreateRescueRequestDto {
     
@@ -9,11 +11,13 @@ public class CreateRescueRequestDto {
     private String location;
 
     @NotNull(message = "Latitude is required")
-    @Range(min = -90, max = 90, message = "Latitude out of range [-90, 90]")
+    @Min(value = -90, message = "Latitude out of range [-90, 90]")
+    @Max(value = 90, message = "Latitude out of range [-90, 90]")
     private Double latitude;
 
     @NotNull(message = "Longitude is required")
-    @Range(min = -180, max = 180, message = "Longitude out of range [-180, 180]")
+    @Min(value = -180, message = "Longitude out of range [-180, 180]")
+    @Max(value = 180, message = "Longitude out of range [-180, 180]")
     private Double longitude;
 
     private String description;
