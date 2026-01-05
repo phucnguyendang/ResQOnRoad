@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Star } from 'lucide-react';
 import { getCompanyDetail } from '../service/companyService';
-import { getReviewsByCompanyId } from '../service/reviewService';
+import { getCachedReviewsByCompanyId } from '../service/reviewService';
 import { getLastCompanyId } from '../utils/companyStorage';
 
 function formatDateTime(value) {
@@ -39,7 +39,7 @@ export default function CompanyProfileView({ onNavigate }) {
 
   const localReviews = useMemo(() => {
     if (!companyId) return [];
-    return getReviewsByCompanyId(companyId).map((r) => ({
+    return getCachedReviewsByCompanyId(companyId).map((r) => ({
       id: `local-${r.requestId}`,
       userName: 'Bạn',
       rating: r.rating,

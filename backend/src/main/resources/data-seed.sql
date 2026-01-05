@@ -33,6 +33,24 @@ VALUES (10, 'company1', '$2a$10$N9qo8uLOickgx2ZMRZoMyeOHbxJwqLHfp6d.zKa0Xj9dJwI1
 INSERT OR REPLACE INTO accounts (id, username, password_hash, full_name, phone_number, email, role, company_id, created_at)
 VALUES (11, 'company2', '$2a$10$N9qo8uLOickgx2ZMRZoMyeOHbxJwqLHfp6d.zKa0Xj9dJwI1mTz8C', 'Cứu Hộ Hoàn Kiếm Express', '0243234567', 'hoankiem@rescue.vn', 'COMPANY', 2, CURRENT_TIMESTAMP);
 
+INSERT OR REPLACE INTO accounts (id, username, password_hash, full_name, phone_number, email, role, company_id, created_at)
+VALUES (12, 'company3', '$2a$10$N9qo8uLOickgx2ZMRZoMyeOHbxJwqLHfp6d.zKa0Xj9dJwI1mTz8C', 'Cứu Hộ Tây Hồ Auto', '0243345678', 'tayho@rescue.vn', 'COMPANY', 3, CURRENT_TIMESTAMP);
+
+INSERT OR REPLACE INTO accounts (id, username, password_hash, full_name, phone_number, email, role, company_id, created_at)
+VALUES (13, 'company4', '$2a$10$N9qo8uLOickgx2ZMRZoMyeOHbxJwqLHfp6d.zKa0Xj9dJwI1mTz8C', 'Cứu Hộ Cầu Giấy Premium', '0243456789', 'caugiay@rescue.vn', 'COMPANY', 4, CURRENT_TIMESTAMP);
+
+INSERT OR REPLACE INTO accounts (id, username, password_hash, full_name, phone_number, email, role, company_id, created_at)
+VALUES (14, 'company5', '$2a$10$N9qo8uLOickgx2ZMRZoMyeOHbxJwqLHfp6d.zKa0Xj9dJwI1mTz8C', 'Cứu Hộ Đống Đa Fast', '0243567890', 'dongda@rescue.vn', 'COMPANY', 5, CURRENT_TIMESTAMP);
+
+INSERT OR REPLACE INTO accounts (id, username, password_hash, full_name, phone_number, email, role, company_id, created_at)
+VALUES (15, 'company6', '$2a$10$N9qo8uLOickgx2ZMRZoMyeOHbxJwqLHfp6d.zKa0Xj9dJwI1mTz8C', 'Cứu Hộ Long Biên Pro', '0243678901', 'longbien@rescue.vn', 'COMPANY', 6, CURRENT_TIMESTAMP);
+
+INSERT OR REPLACE INTO accounts (id, username, password_hash, full_name, phone_number, email, role, company_id, created_at)
+VALUES (16, 'company7', '$2a$10$N9qo8uLOickgx2ZMRZoMyeOHbxJwqLHfp6d.zKa0Xj9dJwI1mTz8C', 'Cứu Hộ Thanh Xuân 365', '0243789012', 'thanhxuan@rescue.vn', 'COMPANY', 7, CURRENT_TIMESTAMP);
+
+INSERT OR REPLACE INTO accounts (id, username, password_hash, full_name, phone_number, email, role, company_id, created_at)
+VALUES (17, 'company8', '$2a$10$N9qo8uLOickgx2ZMRZoMyeOHbxJwqLHfp6d.zKa0Xj9dJwI1mTz8C', 'Cứu Hộ Ngừng Hoạt Động', '0243999999', 'inactive@rescue.vn', 'COMPANY', 8, CURRENT_TIMESTAMP);
+
 -- ============================================
 -- INSERT RESCUE COMPANIES
 -- ============================================

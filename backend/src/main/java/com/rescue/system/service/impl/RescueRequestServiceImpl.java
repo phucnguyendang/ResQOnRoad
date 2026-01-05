@@ -3,15 +3,19 @@ package com.rescue.system.service.impl;
 import com.rescue.system.dto.request.CreateRescueRequestDto;
 import com.rescue.system.dto.request.RejectRescueRequestDto;
 import com.rescue.system.dto.request.UpdateRescueStatusDto;
+import com.rescue.system.dto.response.RescueRequestDetailDto;
 import com.rescue.system.dto.response.RescueRequestDto;
 import com.rescue.system.dto.response.UpdateRescueStatusResponseDto;
 import com.rescue.system.entity.Account;
 import com.rescue.system.entity.RescueRequest;
+import com.rescue.system.entity.RescueRequestImage;
+import com.rescue.system.entity.Role;
 import com.rescue.system.entity.RescueStatus;
 import com.rescue.system.entity.RescueStatusHistory;
 import com.rescue.system.exception.ApiException;
 import com.rescue.system.repository.AccountRepository;
 import com.rescue.system.repository.RescueRequestRepository;
+import com.rescue.system.repository.RescueRequestImageRepository;
 import com.rescue.system.repository.RescueStatusHistoryRepository;
 import com.rescue.system.service.RescueRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,14 +39,24 @@ public class RescueRequestServiceImpl implements RescueRequestService {
     @Autowired
     private RescueStatusHistoryRepository statusHistoryRepository;
 
+    @Autowired
+    private RescueRequestImageRepository rescueRequestImageRepository;
+
     @Override
     @Transactional
     public RescueRequestDto createRescueRequest(Long userId, CreateRescueRequestDto requestDto) {
         Account user = accountRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
 
+        // companyId in CreateRescueRequestDto refers to rescue_companies.id.
+        // Resolve that into the corresponding COMPANY account via accounts.company_id.
+        Account company = accountRepository
+                .findFirstByCompanyIdAndRole(requestDto.getCompanyId(), Role.COMPANY)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Rescue company not found"));
+
         RescueRequest rescueRequest = new RescueRequest();
         rescueRequest.setUser(user);
+        rescueRequest.setCompany(company);
         rescueRequest.setLocation(requestDto.getLocation());
         rescueRequest.setLatitude(requestDto.getLatitude());
         rescueRequest.setLongitude(requestDto.getLongitude());
@@ -52,6 +66,17 @@ public class RescueRequestServiceImpl implements RescueRequestService {
         rescueRequest.setCreatedAt(Instant.now());
 
         RescueRequest savedRequest = rescueRequestRepository.save(rescueRequest);
+
+        // Persist incident images (base64) if provided
+        if (requestDto.getImagesBase64() != null && !requestDto.getImagesBase64().isEmpty()) {
+            List<RescueRequestImage> images = requestDto.getImagesBase64().stream()
+                    .filter(s -> s != null && !s.isBlank())
+                    .map(s -> new RescueRequestImage(savedRequest, s))
+                    .collect(Collectors.toList());
+            if (!images.isEmpty()) {
+                rescueRequestImageRepository.saveAll(images);
+            }
+        }
 
         // Create initial status history entry
         RescueStatusHistory history = new RescueStatusHistory(
@@ -67,6 +92,58 @@ public class RescueRequestServiceImpl implements RescueRequestService {
         RescueRequest rescueRequest = rescueRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Rescue request not found"));
         return new RescueRequestDto(rescueRequest);
+    }
+
+    @Override
+    public RescueRequestDetailDto getRescueRequestDetailById(Long requestId) {
+        RescueRequest rescueRequest = rescueRequestRepository.findById(requestId)
+            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Rescue request not found"));
+
+        RescueRequestDetailDto detail = new RescueRequestDetailDto();
+        detail.setId(rescueRequest.getId());
+        detail.setStatus(rescueRequest.getStatus() != null ? rescueRequest.getStatus().name() : null);
+
+        // user
+        if (rescueRequest.getUser() != null) {
+            detail.setUser(new RescueRequestDetailDto.UserInfo(
+                rescueRequest.getUser().getFullName(),
+                rescueRequest.getUser().getPhoneNumber()
+            ));
+        }
+
+        // incident
+        RescueRequestDetailDto.IncidentInfo incident = new RescueRequestDetailDto.IncidentInfo();
+        incident.setDesc(rescueRequest.getDescription());
+        incident.setAddress(rescueRequest.getLocation());
+        List<String> imageBase64List = rescueRequestImageRepository.findByRescueRequestIdOrderByIdAsc(requestId)
+            .stream()
+            .map(RescueRequestImage::getImageBase64)
+            .collect(Collectors.toList());
+        incident.setImagesBase64(imageBase64List);
+        detail.setIncident(incident);
+
+        // company
+        if (rescueRequest.getCompany() != null) {
+            detail.setCompany(new RescueRequestDetailDto.CompanyInfo(
+                rescueRequest.getCompany().getCompanyId(),
+                rescueRequest.getCompany().getFullName(),
+                rescueRequest.getCompany().getPhoneNumber()
+            ));
+        }
+
+        // timeline
+        List<RescueStatusHistory> histories = statusHistoryRepository
+            .findByRescueRequestIdOrderByChangedAtAsc(requestId);
+        List<RescueRequestDetailDto.TimelineItem> timeline = histories.stream()
+            .map(h -> new RescueRequestDetailDto.TimelineItem(
+                h.getNewStatus() != null ? h.getNewStatus().name() : null,
+                h.getChangedAt(),
+                h.getReason() != null ? h.getReason() : ""
+            ))
+            .collect(Collectors.toList());
+        detail.setTimeline(timeline);
+
+        return detail;
     }
 
     @Override
@@ -109,6 +186,11 @@ public class RescueRequestServiceImpl implements RescueRequestService {
 
         Account company = accountRepository.findById(companyId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Company not found"));
+
+        // If user already selected a company at creation time, only that company can accept.
+        if (rescueRequest.getCompany() != null && !rescueRequest.getCompany().getId().equals(companyId)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "This rescue request is assigned to another company");
+        }
 
         // Assign company and update status
         rescueRequest.setCompany(company);
@@ -216,6 +298,11 @@ public class RescueRequestServiceImpl implements RescueRequestService {
 
         Account company = accountRepository.findById(companyId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Company not found"));
+
+        // If user already selected a company at creation time, only that company can reject.
+        if (rescueRequest.getCompany() != null && !rescueRequest.getCompany().getId().equals(companyId)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "This rescue request is assigned to another company");
+        }
 
         // Set rejection reason and update status
         rescueRequest.setCompany(company);

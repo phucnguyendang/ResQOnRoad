@@ -19,11 +19,7 @@ const ReviewForm = ({ requestId, companyName, onSuccess, onCancel }) => {
         setLoading(true);
 
         try {
-            const response = await reviewService.createOrUpdateReview(
-                requestId,
-                rating,
-                comment
-            );
+            const response = await reviewService.createOrUpdateReview(requestId, rating, comment);
 
             setSuccess('Đánh giá của bạn đã được gửi thành công!');
             setRating(5);
@@ -36,8 +32,7 @@ const ReviewForm = ({ requestId, companyName, onSuccess, onCancel }) => {
             // Clear success message after 3 seconds
             setTimeout(() => setSuccess(''), 3000);
         } catch (err) {
-            setError(err.response?.data?.message || 'Có lỗi xảy ra khi gửi đánh giá');
-            console.error('Error submitting review:', err);
+            setError(err?.message || 'Có lỗi xảy ra khi gửi đánh giá');
         } finally {
             setLoading(false);
         }

@@ -3,6 +3,7 @@ package com.rescue.system.service;
 import com.rescue.system.dto.request.CreateRescueRequestDto;
 import com.rescue.system.dto.request.RejectRescueRequestDto;
 import com.rescue.system.dto.request.UpdateRescueStatusDto;
+import com.rescue.system.dto.response.RescueRequestDetailDto;
 import com.rescue.system.dto.response.RescueRequestDto;
 import com.rescue.system.dto.response.UpdateRescueStatusResponseDto;
 import com.rescue.system.entity.RescueStatus;
@@ -20,6 +21,11 @@ public interface RescueRequestService {
      * Get rescue request by ID
      */
     RescueRequestDto getRescueRequestById(Long requestId);
+
+    /**
+     * Get rescue request detail (docs-aligned shape including timeline)
+     */
+    RescueRequestDetailDto getRescueRequestDetailById(Long requestId);
     
     /**
      * Get all rescue requests for a user

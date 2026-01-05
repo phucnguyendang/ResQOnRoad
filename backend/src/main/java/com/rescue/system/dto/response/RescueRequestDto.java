@@ -34,7 +34,7 @@ public class RescueRequestDto {
         this.userPhoneNumber = request.getUser().getPhoneNumber();
         
         if (request.getCompany() != null) {
-            this.companyId = request.getCompany().getId();
+            this.companyId = request.getCompany().getCompanyId();
             this.companyName = request.getCompany().getFullName();
             this.companyPhoneNumber = request.getCompany().getPhoneNumber();
         }

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { createRescueRequestMock } from '../service/rescueRequestService';
+import { createRescueRequest } from '../service/rescueRequestService';
 import { searchNearbyCompanies } from '../service/companyService';
 
 function readFileAsDataUrl(file) {
@@ -159,7 +159,11 @@ const RescueRequestCreateView = ({ onNavigate }) => {
         throw new Error('Vui lòng chọn công ty cứu hộ.');
       }
 
-      const result = await createRescueRequestMock({
+      if (!hasCoords) {
+        throw new Error('Vui lòng lấy tọa độ GPS (latitude/longitude) trước khi gửi yêu cầu.');
+      }
+
+      const result = await createRescueRequest({
         company_id: companyId,
         incident_desc: incidentDesc,
         location_address: address,
@@ -181,7 +185,7 @@ const RescueRequestCreateView = ({ onNavigate }) => {
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6">
           <h1 className="text-2xl font-extrabold text-gray-900">Gửi yêu cầu cứu hộ (UC201)</h1>
-          <p className="text-sm text-gray-600 mt-1">Backend tạo yêu cầu chưa hoàn thiện → frontend dùng mock API để giả lập gửi thành công.</p>
+          <p className="text-sm text-gray-600 mt-1">Gửi yêu cầu tới backend (POST /api/rescue-requests) và gán công ty đã chọn.</p>
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <div>
@@ -305,9 +309,8 @@ const RescueRequestCreateView = ({ onNavigate }) => {
 
           {created && (
             <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="font-bold text-green-800">Gửi yêu cầu thành công (mock)</div>
+              <div className="font-bold text-green-800">Gửi yêu cầu thành công</div>
               <div className="text-sm text-green-800 mt-1">Mã yêu cầu: <span className="font-semibold">{created.id}</span></div>
-              <div className="text-xs text-green-700 mt-2">Lưu ý: Vì tạo yêu cầu đang mock, backend có thể chưa có dữ liệu tương ứng khi bạn theo dõi.</div>
               <div className="mt-3 flex gap-3">
                 <button
                   onClick={() => onNavigate('requestDetail')}

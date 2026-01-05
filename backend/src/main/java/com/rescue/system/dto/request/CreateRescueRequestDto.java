@@ -1,5 +1,6 @@
 package com.rescue.system.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.DecimalMax;
@@ -8,8 +9,13 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public class CreateRescueRequestDto {
+
+    @NotNull(message = "Company ID is required")
+    @JsonAlias({"company_id", "companyId"})
+    private Long companyId;
     
     @NotBlank(message = "Location is required")
+    @JsonAlias({"location_address", "location"})
     private String location;
 
     @NotNull(message = "Latitude is required")
@@ -22,11 +28,14 @@ public class CreateRescueRequestDto {
     @DecimalMax(value = "180.0", inclusive = true, message = "Longitude out of range [-180, 180]")
     private Double longitude;
     
+    @JsonAlias({"incident_desc", "description"})
     private String description;
 
+    @JsonAlias({"service_type", "serviceType"})
     private String serviceType;
 
     @Size(max = 10, message = "A maximum of 10 images are allowed")
+    @JsonAlias({"images_base64", "imagesBase64"})
     private List<@NotBlank String> imagesBase64;
 
     public CreateRescueRequestDto() {
@@ -36,6 +45,14 @@ public class CreateRescueRequestDto {
         this.location = location;
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+
+    public Long getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Long companyId) {
+        this.companyId = companyId;
     }
 
     public String getLocation() {

@@ -26,25 +26,16 @@ const STATUS_LABELS = {
 function normalizeTimelineFromBackend(detail) {
   const timeline = detail?.timeline || detail?.history || null;
   if (!Array.isArray(timeline)) return null;
-  return timeline.map((item) => ({
-    status: item.status || item.newStatus || item.current_status,
-    updatedAt: item.updated_at || item.time || item.changedAt || item.updatedAt,
-    note: item.note || item.reason || '',
-  }));
-}
-
-function buildMockTimeline(detail) {
-  const createdAt = detail?.createdAt || detail?.created_at || new Date().toISOString();
-  const current = String(detail?.status || '').toUpperCase();
-  const steps = ['PENDING_CONFIRMATION', 'ACCEPTED', 'IN_TRANSIT', 'IN_PROGRESS', 'COMPLETED'];
-  const endIndex = Math.max(0, steps.indexOf(current));
-  const upto = endIndex === -1 ? ['PENDING_CONFIRMATION'] : steps.slice(0, endIndex + 1);
-  const base = new Date(createdAt).getTime();
-  return upto.map((s, idx) => ({
-    status: s,
-    updatedAt: new Date(base + idx * 5 * 60 * 1000).toISOString(),
-    note: '',
-  }));
+  return timeline
+    .filter(Boolean)
+    .map((raw) => {
+      const item = raw && typeof raw === 'object' ? raw : { status: String(raw) };
+      return {
+        status: item.status || item.newStatus || item.current_status,
+        updatedAt: item.updated_at || item.time || item.changedAt || item.updatedAt,
+        note: item.note || item.reason || '',
+      };
+    });
 }
 
 const RescueRequestTrackView = ({ onNavigate }) => {
@@ -84,7 +75,7 @@ const RescueRequestTrackView = ({ onNavigate }) => {
       setDetail(data);
 
       const fromBackend = normalizeTimelineFromBackend(data);
-      setTimeline(fromBackend || buildMockTimeline(data));
+      setTimeline(fromBackend || []);
     } catch (err) {
       const details = Array.isArray(err?.details) && err.details.length > 0
         ? `: ${err.details.join(', ')}`
@@ -181,7 +172,7 @@ const RescueRequestTrackView = ({ onNavigate }) => {
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-6">
           <h1 className="text-2xl font-extrabold text-gray-900">Chi tiết yêu cầu cứu hộ</h1>
-          <p className="text-sm text-gray-600 mt-1">Dữ liệu chi tiết + timeline đang lấy từ mock để bạn xem giao diện.</p>
+          <p className="text-sm text-gray-600 mt-1">Đang lấy chi tiết từ backend (GET /api/rescue-requests/{'{id}'}). Timeline dùng dữ liệu backend.</p>
 
           {!selectedId && (
             <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-900">
@@ -280,7 +271,8 @@ const RescueRequestTrackView = ({ onNavigate }) => {
                 <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="font-bold text-gray-900 mb-2">Tiến trình</div>
                   <ul className="space-y-2">
-                    {viewModel.timeline.map((item, idx) => {
+                    {viewModel.timeline.map((rawItem, idx) => {
+                      const item = rawItem && typeof rawItem === 'object' ? rawItem : { status: String(rawItem) };
                       const status = item.status || item.current_status;
                       const time = item.updated_at || item.time || item.updatedAt;
                       const note = item.note;

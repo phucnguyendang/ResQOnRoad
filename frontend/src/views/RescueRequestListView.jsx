@@ -65,7 +65,9 @@ const RescueRequestListView = ({ onNavigate }) => {
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-6">
           <h1 className="text-2xl font-extrabold text-gray-900">Danh sách yêu cầu cứu hộ</h1>
-          <p className="text-sm text-gray-600 mt-1">Hiển thị các yêu cầu chưa hoàn thành (mock). Bạn có thể tạo yêu cầu mới để danh sách có dữ liệu.</p>
+          <p className="text-sm text-gray-600 mt-1">
+            Đang lấy dữ liệu từ backend (GET /api/rescue-requests/user/my-requests).
+          </p>
 
           <div className="mt-4">
             {loading && <div className="text-sm text-gray-700">Đang tải danh sách...</div>}
