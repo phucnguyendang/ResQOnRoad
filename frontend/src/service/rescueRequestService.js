@@ -97,3 +97,34 @@ export async function getMyRescueRequests() {
 
   return res.data;
 }
+
+/**
+ * UC203 - Cancel rescue request
+ * POST /api/rescue-requests/{id}/cancel
+ */
+export async function cancelRescueRequest(id) {
+  if (USE_MOCK_RESCUE_REQUESTS_API) {
+    // Mock: Update status to CANCELLED_BY_USER
+    const list = loadMockRequests();
+    const index = list.findIndex((r) => String(r.id) === String(id));
+    if (index === -1) {
+      const err = new Error('Không tìm thấy yêu cầu');
+      err.status = 404;
+      throw err;
+    }
+    list[index].status = 'CANCELLED_BY_USER';
+    list[index].updatedAt = new Date().toISOString();
+    saveMockRequests(list);
+    return list[index];
+  }
+
+  const auth = loadAuth();
+  const token = auth?.token;
+
+  const res = await apiRequest(`/api/rescue-requests/${id}/cancel`, {
+    method: 'POST',
+    token,
+  });
+
+  return res.data;
+}

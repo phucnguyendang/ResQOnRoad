@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Car, Menu, X, LogIn, UserPlus } from 'lucide-react';
+import { Car, Menu, X, LogIn, UserPlus, User } from 'lucide-react';
 
 const Header = ({ onNavigate, currentView, user, onLogout }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -32,6 +32,13 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
           {user ? (
             <div className="flex items-center space-x-2">
               <span className="text-sm">Xin chào, {user.username}</span>
+              <button
+                onClick={() => onNavigate('profile')}
+                className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm flex items-center gap-1"
+              >
+                <User size={16} />
+                Hồ sơ
+              </button>
               <button
                 onClick={onLogout}
                 className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm"
@@ -75,12 +82,15 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
           <button onClick={() => { onNavigate('requestList'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Theo dõi</button>
           <button className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Dịch vụ</button>
           {user ? (
-            <button
-              onClick={() => { onLogout(); setIsMenuOpen(false); }}
-              className="block w-full text-left py-2 bg-red-500 hover:bg-red-600 px-2 rounded"
-            >
-              Đăng xuất
-            </button>
+            <>
+              <button onClick={() => { onNavigate('profile'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Hồ sơ</button>
+              <button
+                onClick={() => { onLogout(); setIsMenuOpen(false); }}
+                className="block w-full text-left py-2 bg-red-500 hover:bg-red-600 px-2 rounded"
+              >
+                Đăng xuất
+              </button>
+            </>
           ) : (
             <>
               <button onClick={() => { onNavigate('login'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Đăng nhập</button>
