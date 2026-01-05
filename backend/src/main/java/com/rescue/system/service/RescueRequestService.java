@@ -4,6 +4,7 @@ import com.rescue.system.dto.request.CreateRescueRequestDto;
 import com.rescue.system.dto.request.RejectRescueRequestDto;
 import com.rescue.system.dto.request.UpdateRescueStatusDto;
 import com.rescue.system.dto.response.RescueRequestDto;
+import com.rescue.system.dto.response.UpdateRescueStatusResponseDto;
 import com.rescue.system.entity.RescueStatus;
 
 import java.util.List;
@@ -44,6 +45,11 @@ public interface RescueRequestService {
      * Update rescue request status by company
      */
     RescueRequestDto updateRescueRequestStatus(Long requestId, Long companyId, UpdateRescueStatusDto statusDto);
+    
+    /**
+     * Update rescue request status and return response with history
+     */
+    UpdateRescueStatusResponseDto updateRescueRequestStatusWithHistory(Long requestId, Long companyId, UpdateRescueStatusDto statusDto);
     
     /**
      * Reject rescue request with reason

@@ -81,98 +81,46 @@ Dựa trên Use Case 402 .
 
 Dựa trên Use Case 202 . API trả về danh sách công ty kèm khoảng cách tính toán từ vị trí người dùng.
 
-Backend hiện có cả 2 kiểu gọi:
-
-* **GET:** `GET /api/companies/search?lat={lat}&lng={lng}&maxDistance={km}&page={page}&size={size}`
-* **POST:** `POST /api/companies/search`
-
-Trong đó:
-
+* **Endpoint:** `GET /companies/search`
+* **Query Params:**
 * `lat`: 21.0285 (Vĩ độ người dùng)
 * `lng`: 105.8542 (Kinh độ người dùng)
-* `maxDistance`: 50.0 (km, mặc định 50)
-* `page`: 0 (mặc định 0)
-* `size`: 20 (mặc định 20)
+* `service_type`: "Vá lốp" (Tùy chọn)
 
 
-* **Response (200 OK)** (`ApiResponse<Page<CompanySearchResponse>>`):
+* **Response (200 OK):**
 ```json
 {
-  "status": 200,
-  "message": "Tìm thấy 2 công ty cứu hộ gần bạn",
-  "data": {
-    "content": [
-      {
-        "id": 50,
-        "name": "Cứu hộ Ba Đình",
-        "address": "...",
-        "phone": "0243123456",
-        "email": "...",
-        "distance": 1.2,
-        "averageRating": 4.8,
-        "totalReviews": 120,
-        "isAvailable": true,
-        "isVerified": true,
-        "description": "...",
-        "services": [
-          { "id": 1, "name": "Vá lốp", "type": "TIRE", "typeDisplayName": "Vá lốp", "basePrice": 150000, "priceUnit": "VND", "isAvailable": true, "estimatedTime": 15 },
-          { "id": 2, "name": "Kích bình", "type": "BATTERY", "typeDisplayName": "Kích bình", "basePrice": 100000, "priceUnit": "VND", "isAvailable": true, "estimatedTime": 10 }
-        ],
-        "latitude": 21.0300,
-        "longitude": 105.8500
+  "data": [
+    {
+      "id": 50,
+      "company_name": "Cứu hộ Ba Đình",
+      "phone": "0243123456",
+      "rating_avg": 4.8,
+      "distance_km": 1.2, // Khoảng cách tính toán
+      "location": {
+        "lat": 21.0300,
+        "lng": 105.8500
+      },
+      "services": [
+        { "name": "Vá lốp", "price": 150000 },
+        { "name": "Kích bình", "price": 100000 }
+      ]
+    },
+    {
+      "id": 52,
+      "company_name": "Gara Ô tô 247",
+      "phone": "0909000111",
+      "rating_avg": 4.2,
+      "distance_km": 3.5,
+      "location": {
+        "lat": 21.0500,
+        "lng": 105.8600
       }
-    ],
-    "totalElements": 2,
-    "totalPages": 1,
-    "number": 0,
-    "size": 20
-  }
+    }
+  ]
 }
 
-```
-
-
-### 3.1.2. Lấy hồ sơ công ty cứu hộ (Company Detail + Reviews)
-
-> Dùng cho màn hình "Hồ sơ công ty" phía người dùng. Backend trả về luôn rating + danh sách reviews.
-
-* **Endpoint:** `GET /api/companies/{companyId}`
-
-* **Response (200 OK)** (`ApiResponse<CompanyDetailResponse>`):
-```json
-{
-  "status": 200,
-  "message": "Lấy thông tin công ty thành công",
-  "data": {
-    "id": 50,
-    "name": "Cứu hộ Ba Đình",
-    "address": "...",
-    "phone": "0243123456",
-    "email": "...",
-    "latitude": 21.0300,
-    "longitude": 105.8500,
-    "serviceRadius": 50.0,
-    "isActive": true,
-    "isVerified": true,
-    "averageRating": 4.8,
-    "totalReviews": 120,
-    "description": "...",
-    "businessLicense": "...",
-    "services": [
-      { "id": 1, "name": "Vá lốp", "type": "TIRE", "typeDisplayName": "Vá lốp", "basePrice": 150000, "priceUnit": "VND", "isAvailable": true, "estimatedTime": 15 }
-    ],
-    "reviews": [
-      {
-        "id": 9001,
-        "userName": "Nguyễn Văn A",
-        "rating": 5,
-        "comment": "Tới nhanh, xử lý chuyên nghiệp.",
-        "isVerified": true,
-        "createdAt": "2025-01-15T08:30:00Z"
-      }
-    ]
-  }
-}
 ```
 
 
@@ -201,7 +149,7 @@ Chỉ cho phép khi yêu cầu cứu hộ đã ở trạng thái `COMPLETED`.
 * **Response (201 Created):**
 ```json
 {
-  "code": 201,
+  "status": 201,
   "message": "Gửi đánh giá thành công",
   "data": {
     "id": 501,
@@ -214,13 +162,12 @@ Chỉ cho phép khi yêu cầu cứu hộ đã ở trạng thái `COMPLETED`.
 }
 ```
 
-### 3.2.2.  Lấy danh sách đánh giá của công ty
+### 3.2.2. Lấy danh sách đánh giá của công ty
 
 * **Endpoint:** `GET /api/companies/{companyId}/reviews?page=1&limit=10`
 * **Response (200 OK):**
 ```json
 {
-  "code": 200,
   "message": "Lấy danh sách đánh giá thành công",
   "data": {
     "items": [
@@ -235,8 +182,59 @@ Chỉ cho phép khi yêu cầu cứu hộ đã ở trạng thái `COMPLETED`.
     ],
     "pagination": {
       "current_page": 1,
-      "total_pages": 1
+      "total_pages": 1,
+      "total_items": 1
     }
+  }
+}
+```
+
+### 3.2.3. Lấy điểm đánh giá trung bình của công ty
+
+* **Endpoint:** `GET /api/companies/{companyId}/rating`
+* **Response (200 OK):**
+```json
+{
+  "message": "Lấy điểm đánh giá thành công",
+  "data": {
+    "company_id": 50,
+    "rating_avg": 4.6
+  }
+}
+```
+
+### 3.2.4. Lấy danh sách đánh giá của người dùng hiện tại
+
+* **Endpoint:** `GET /api/reviews/my-reviews`
+* **Header:** `Authorization: Bearer {token}`
+* **Response (200 OK):**
+```json
+{
+  "message": "Lấy danh sách đánh giá của bạn thành công",
+  "data": [
+    {
+      "id": 501,
+      "userName": "Nguyễn Văn A",
+      "rating": 5,
+      "comment": "Tới nhanh, xử lý chuyên nghiệp.",
+      "isVerified": true,
+      "createdAt": "2025-11-20T12:00:00Z"
+    }
+  ]
+}
+```
+
+### 3.2.5. Kiểm tra xem người dùng đã đánh giá công ty
+
+* **Endpoint:** `GET /api/reviews/check?companyId={companyId}`
+* **Header:** `Authorization: Bearer {token}`
+* **Response (200 OK):**
+```json
+{
+  "message": "Kiểm tra trạng thái đánh giá thành công",
+  "data": {
+    "company_id": 50,
+    "has_reviewed": true
   }
 }
 ```
@@ -419,126 +417,37 @@ Dựa trên bảng `BinhLuan` .
 
 ```
 
-
-
 ---
 
 ## 6. Module Tin nhắn (Chat)
 
 ### 6.1. Gửi tin nhắn (Send Message)
 
-Dựa trên Use Case 101 (UC101) và backend hiện tại (MessageController).
+Dựa trên Use Case 101 và bảng `TinNhan` .
 
-Lưu ý:
-- Backend đang dùng context-path `/v1` và route prefix `/api/messages`.
-- Backend **không cần** `receiver_id` trong request; hệ thống tự xác định người nhận dựa trên `requestId` và hội thoại (Conversation).
-
-#### 6.1.1. Truy cập/Tạo hội thoại theo yêu cầu cứu hộ
-
-* **Endpoint:** `POST /api/messages/conversation/{requestId}`
-* **Header:** `Authorization: Bearer {token}`
-* **Response (200 OK):**
-```json
-{
-  "code": 200,
-  "message": "Truy cập cuộc hội thoại thành công",
-  "data": {
-    "id": 10,
-    "requestId": 1001,
-    "userId": 101,
-    "userName": "Nguyễn Văn A",
-    "companyId": 50,
-    "companyName": "Cứu hộ Ba Đình",
-    "startedAt": "2025-11-20T10:00:00Z",
-    "endedAt": null,
-    "status": "ACTIVE",
-    "agreedCost": null,
-    "costNotes": null,
-    "unreadCount": 0,
-    "messages": []
-  }
-}
-```
-
-#### 6.1.2. Lấy lịch sử tin nhắn theo yêu cầu cứu hộ
-
-* **Endpoint:** `GET /api/messages/{requestId}`
-* **Header:** `Authorization: Bearer {token}`
-* **Response (200 OK):**
-```json
-{
-  "code": 200,
-  "message": "Lấy lịch sử tin nhắn thành công",
-  "data": {
-    "id": 10,
-    "requestId": 1001,
-    "userId": 101,
-    "companyId": 50,
-    "status": "ACTIVE",
-    "unreadCount": 1,
-    "messages": [
-      {
-        "id": 99,
-        "conversationId": 10,
-        "senderId": 101,
-        "senderName": "Nguyễn Văn A",
-        "senderRole": "USER",
-        "content": "Tôi đang đứng ở gốc cây to đối diện số nhà.",
-        "sentAt": "2025-11-20T10:15:00Z",
-        "isRead": false,
-        "attachmentUrl": null,
-        "attachmentType": null
-      }
-    ]
-  }
-}
-```
-
-#### 6.1.3. Gửi tin nhắn
-
-* **Endpoint:** `POST /api/messages`
-* **Header:** `Authorization: Bearer {token}`
+* **Endpoint:** `POST /messages`
 * **Request Body:**
 ```json
 {
-  "requestId": 1001,
-  "content": "Tôi đang đứng ở gốc cây to đối diện số nhà.",
-  "attachmentUrl": null,
-  "attachmentType": null
+  "request_id": 1001, // Gắn liền với một yêu cầu cứu hộ cụ thể
+  "receiver_id": 50,  // ID người nhận
+  "content": "Tôi đang đứng ở gốc cây to đối diện số nhà."
 }
+
 ```
+
 
 * **Response (201 Created):**
 ```json
 {
-  "code": 201,
-  "message": "Tin nhắn đã được gửi thành công",
   "data": {
     "id": 99,
-    "conversationId": 10,
-    "senderId": 101,
-    "senderName": "Nguyễn Văn A",
-    "senderRole": "USER",
-    "content": "Tôi đang đứng ở gốc cây to đối diện số nhà.",
-    "sentAt": "2025-11-20T10:15:00Z",
-    "isRead": false,
-    "attachmentUrl": null,
-    "attachmentType": null
+    "content": "Tôi đang đứng ở gốc cây to...",
+    "sent_at": "2025-11-20T10:15:00Z",
+    "is_read": false
   }
 }
-```
 
-#### 6.1.4. (Tuỳ chọn) Đánh dấu đã đọc
-
-* **Endpoint:** `PUT /api/messages/{conversationId}/read`
-* **Header:** `Authorization: Bearer {token}`
-* **Response (200 OK):**
-```json
-{
-  "code": 200,
-  "message": "Đã đánh dấu 3 tin nhắn đã đọc",
-  "data": 3
-}
 ```
 
 
@@ -568,3 +477,179 @@ Hệ thống sử dụng các mã lỗi HTTP tiêu chuẩn.
 * **401 Unauthorized:** Token không hợp lệ hoặc hết hạn.
 * **403 Forbidden:** Không có quyền thực hiện hành động (VD: User thường cố gắng xóa bài đăng của người khác).
 * **404 Not Found:** Không tìm thấy tài nguyên (VD: ID công ty không tồn tại).
+
+---
+
+## 8. Hướng dẫn sử dụng UC102 (Review & Feedback)
+
+### Frontend Integration
+
+#### 1. Sử dụng ReviewForm Component
+
+```jsx
+import ReviewForm from './components/ReviewForm';
+
+function RescueRequestDetailView() {
+  const [rescueRequest, setRescueRequest] = useState(null);
+
+  const handleReviewSuccess = (review) => {
+    console.log('Review submitted:', review);
+    // Có thể update UI hoặc chuyển hướng người dùng
+  };
+
+  if (rescueRequest?.status === 'COMPLETED') {
+    return (
+      <div>
+        <ReviewForm
+          requestId={rescueRequest.id}
+          companyName={rescueRequest.company.name}
+          onSuccess={handleReviewSuccess}
+          onCancel={() => console.log('User skipped review')}
+        />
+      </div>
+    );
+  }
+
+  return <div>Request is not completed yet</div>;
+}
+```
+
+#### 2. Sử dụng ReviewList Component
+
+```jsx
+import ReviewList from './components/ReviewList';
+
+function CompanyDetailView() {
+  const companyId = 50; // Lấy từ URL hoặc props
+
+  return (
+    <div>
+      <ReviewList
+        companyId={companyId}
+        companyName="Cứu hộ Ba Đình"
+      />
+    </div>
+  );
+}
+```
+
+#### 3. Sử dụng reviewService
+
+```javascript
+import reviewService from './service/reviewService';
+
+// Tạo/Cập nhật đánh giá
+async function submitReview() {
+  try {
+    const response = await reviewService.createOrUpdateReview(
+      1001,  // requestId
+      5,     // rating (1-5)
+      'Tới nhanh, xử lý chuyên nghiệp.'  // comment
+    );
+    console.log('Review submitted:', response.data.data);
+  } catch (error) {
+    console.error('Error:', error.response.data.message);
+  }
+}
+
+// Lấy danh sách đánh giá của công ty
+async function getCompanyReviews() {
+  try {
+    const response = await reviewService.getCompanyReviews(
+      50,   // companyId
+      1,    // page (optional, default 1)
+      10    // limit (optional, default 10)
+    );
+    console.log('Reviews:', response.data.data.items);
+    console.log('Pagination:', response.data.data.pagination);
+  } catch (error) {
+    console.error('Error:', error.response.data.message);
+  }
+}
+
+// Lấy điểm đánh giá trung bình
+async function getAverageRating() {
+  try {
+    const response = await reviewService.getCompanyAverageRating(50);
+    console.log('Average rating:', response.data.data.rating_avg);
+  } catch (error) {
+    console.error('Error:', error.response.data.message);
+  }
+}
+
+// Lấy danh sách đánh giá của người dùng
+async function getUserReviews() {
+  try {
+    const response = await reviewService.getUserReviews();
+    console.log('My reviews:', response.data.data);
+  } catch (error) {
+    console.error('Error:', error.response.data.message);
+  }
+}
+
+// Kiểm tra xem người dùng đã đánh giá công ty này chưa
+async function checkIfReviewed() {
+  try {
+    const response = await reviewService.checkIfReviewed(50);
+    console.log('Has reviewed:', response.data.data.has_reviewed);
+  } catch (error) {
+    console.error('Error:', error.response.data.message);
+  }
+}
+```
+
+### Backend Requirements
+
+#### Tiền điều kiện
+- Yêu cầu cứu hộ phải có status = `COMPLETED`
+- Người dùng phải đã đăng nhập (có token JWT hợp lệ)
+- Yêu cầu cứu hộ phải được gán cho một công ty
+
+#### Xử lý lỗi
+- `400 Bad Request`: Yêu cầu chưa hoàn thành hoặc dữ liệu không hợp lệ
+- `401 Unauthorized`: Token không hợp lệ
+- `403 Forbidden`: Người dùng không phải là người tạo yêu cầu
+- `404 Not Found`: Không tìm thấy yêu cầu, người dùng hoặc công ty
+
+#### Thông tin được lưu trữ
+- **Rating:** 1-5 sao
+- **Comment:** Tối đa 1000 ký tự
+- **isVerified:** `true` nếu là đánh giá từ hệ thống (tự động xác thực)
+- **createdAt:** Thời gian tạo đánh giá (tự động sinh)
+
+#### Cập nhật điểm đánh giá công ty
+- Khi tạo/cập nhật đánh giá, điểm trung bình của công ty sẽ được tự động tính toán
+- Điểm trung bình được tính từ tất cả đánh giá của công ty
+- Endpoint `GET /api/companies/{companyId}/rating` sẽ trả về điểm cập nhật nhất
+
+### Data Flow
+
+```
+User completes rescue request (Status = COMPLETED)
+           ↓
+Frontend shows ReviewForm component
+           ↓
+User provides rating (1-5 stars) and optional comment
+           ↓
+User clicks "Gửi đánh giá"
+           ↓
+POST /api/reviews (with token)
+           ↓
+Backend validates:
+  - User is logged in
+  - Request exists and is COMPLETED
+  - User is the one who created the request
+           ↓
+Backend saves review and updates company's average rating
+           ↓
+Return ReviewDetail with id, rating, comment, etc.
+           ↓
+Frontend shows success message
+```
+
+### Admin Features
+
+Admin có thể:
+- Xem tất cả đánh giá của tất cả công ty qua đó
+- Phân tích phản hồi để cải thiện dịch vụ
+- Theo dõi điểm đánh giá trung bình của từng công ty

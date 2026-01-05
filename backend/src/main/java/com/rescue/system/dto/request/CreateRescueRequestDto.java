@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Size;
+import java.util.List;
 
 public class CreateRescueRequestDto {
     
@@ -23,6 +25,9 @@ public class CreateRescueRequestDto {
     private String description;
 
     private String serviceType;
+
+    @Size(max = 10, message = "A maximum of 10 images are allowed")
+    private List<@NotBlank String> imagesBase64;
 
     public CreateRescueRequestDto() {
     }
@@ -71,5 +76,13 @@ public class CreateRescueRequestDto {
 
     public void setServiceType(String serviceType) {
         this.serviceType = serviceType;
+    }
+
+    public List<String> getImagesBase64() {
+        return imagesBase64;
+    }
+
+    public void setImagesBase64(List<String> imagesBase64) {
+        this.imagesBase64 = imagesBase64;
     }
 }

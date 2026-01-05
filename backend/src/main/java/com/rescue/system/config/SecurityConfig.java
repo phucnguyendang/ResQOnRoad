@@ -45,9 +45,17 @@ public class SecurityConfig {
                                 "/api/companies/{companyId}", "/api/companies/{companyId}/services",
                                 "/api/companies/{companyId}/profile")
                         .permitAll()
+                        // UC103: Community Support - Public read access
+                        .requestMatchers(HttpMethod.GET, "/api/community/posts", "/api/community/posts/{id}",
+                                "/api/community/posts/{id}/comments", "/api/community/posts/{id}/comments/helpful",
+                                "/api/community/posts/search", "/api/community/posts/nearby",
+                                "/api/community/posts/unresolved", "/api/community/posts/popular")
+                        .permitAll()
                         .requestMatchers("/api/debug/**").permitAll()
                         .requestMatchers("/error", "/actuator/**").permitAll()
                         .requestMatchers("/api/users/profile").hasRole("USER")
+                        .requestMatchers("/api/company/**").hasRole("COMPANY")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
