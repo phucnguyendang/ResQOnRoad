@@ -1,0 +1,383 @@
+#!/bin/bash
+
+################################################################################
+#                                                                              #
+#               UC103 - COMMUNITY SUPPORT & CONSULTATION TEST                 #
+#                                                                              #
+#  Test suite for Community module API endpoints                              #
+#  Includes: Post creation, listing, and comment management                   #
+#                                                                              #
+#  Usage: ./test_uc103                                                        #
+#  Or:    bash test_uc103                                                     #
+#                                                                              #
+################################################################################
+
+set -e
+
+# ═══════════════════════════════════════════════════════════════════════════
+#                              CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════
+
+BASE_URL="${BASE_URL:-http://localhost:8080/api}"
+COMPANY_ID="${COMPANY_ID:-1}"
+POST_ID="${POST_ID:-1}"
+
+# Mock JWT Token - Replace with actual token from login endpoint
+BEARER_TOKEN="${BEARER_TOKEN:-Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c}"
+
+# Colors for output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Test counters
+PASS_COUNT=0
+FAIL_COUNT=0
+TEST_NUM=0
+
+# ═══════════════════════════════════════════════════════════════════════════
+#                            UTILITY FUNCTIONS
+# ═══════════════════════════════════════════════════════════════════════════
+
+print_title() {
+    echo ""
+    echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}$1${NC}"
+    echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
+    echo ""
+}
+
+print_section() {
+    echo ""
+    echo -e "${YELLOW}────────────────────────────────────────────────────────────────${NC}"
+    echo -e "${YELLOW}$1${NC}"
+    echo -e "${YELLOW}────────────────────────────────────────────────────────────────${NC}"
+    echo ""
+}
+
+test_endpoint() {
+    local test_name=$1
+    local method=$2
+    local endpoint=$3
+    local data=$4
+    local expected_status=$5
+    local require_auth=$6
+    
+    TEST_NUM=$((TEST_NUM + 1))
+    
+    if [ $TEST_NUM -eq 1 ]; then
+        if ! curl -s "$BASE_URL/community/posts" -o /dev/null 2>&1; then
+            echo -e "${RED}✗ ERROR: Cannot connect to $BASE_URL${NC}"
+            echo "   Please start the backend server: mvn spring-boot:run"
+            exit 1
+        fi
+    fi
+    
+    printf "Test %2d: %-50s " "$TEST_NUM" "$test_name"
+    
+    local headers="-H 'Content-Type: application/json'"
+    [ "$require_auth" = "true" ] && headers="$headers -H 'Authorization: $BEARER_TOKEN'"
+    
+    local response
+    if [ -z "$data" ]; then
+        response=$(eval "curl -s -w '\\n%{http_code}' -X $method $headers '$BASE_URL$endpoint'")
+    else
+        response=$(eval "curl -s -w '\\n%{http_code}' -X $method $headers -d '$data' '$BASE_URL$endpoint'")
+    fi
+    
+    local status=$(echo "$response" | tail -n1)
+    local body=$(echo "$response" | head -n-1)
+    
+    if [ "$status" = "$expected_status" ]; then
+        echo -e "${GREEN}✓ PASS${NC} (HTTP $status)"
+        PASS_COUNT=$((PASS_COUNT + 1))
+        return 0
+    else
+        echo -e "${RED}✗ FAIL${NC} (Expected HTTP $expected_status, got $status)"
+        echo "   Response: $(echo "$body" | head -c 80)..."
+        FAIL_COUNT=$((FAIL_COUNT + 1))
+        return 1
+    fi
+}
+
+print_summary() {
+    local total=$((PASS_COUNT + FAIL_COUNT))
+    
+    echo ""
+    print_title "TEST SUMMARY"
+    
+    echo "Total Tests:  $total"
+    echo -e "Passed:       ${GREEN}$PASS_COUNT${NC}"
+    echo -e "Failed:       ${RED}$FAIL_COUNT${NC}"
+    echo ""
+    
+    if [ $FAIL_COUNT -eq 0 ]; then
+        echo -e "${GREEN}✓ ALL TESTS PASSED!${NC}"
+        echo "UC103 Community Support API is working correctly."
+        return 0
+    else
+        echo -e "${RED}✗ SOME TESTS FAILED${NC}"
+        echo "Please review the failed tests above."
+        return 1
+    fi
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+#                              TEST EXECUTION
+# ═══════════════════════════════════════════════════════════════════════════
+
+print_title "UC103 - COMMUNITY SUPPORT & CONSULTATION TEST SUITE"
+
+echo "Configuration:"
+echo "  Base URL:     $BASE_URL"
+echo "  Post ID:      $POST_ID"
+echo ""
+
+# ─────────────────────────────────────────────────────────────────────────
+# PUBLIC ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────────
+
+print_section "PUBLIC ENDPOINTS - No Authentication Required"
+
+# TC1: Get posts with pagination
+test_endpoint \
+    "GET /community/posts?page=1&limit=10" \
+    "GET" \
+    "/community/posts?page=1&limit=10" \
+    "" \
+    "200" \
+    "false"
+
+# TC2: Get single post detail
+test_endpoint \
+    "GET /community/posts/{postId}" \
+    "GET" \
+    "/community/posts/$POST_ID" \
+    "" \
+    "200" \
+    "false"
+
+# TC3: Get comments for a post
+test_endpoint \
+    "GET /community/posts/{postId}/comments" \
+    "GET" \
+    "/community/posts/$POST_ID/comments" \
+    "" \
+    "200" \
+    "false"
+
+# ─────────────────────────────────────────────────────────────────────────
+# PROTECTED ENDPOINTS - Authentication Required
+# ─────────────────────────────────────────────────────────────────────────
+
+print_section "PROTECTED ENDPOINTS - JWT Authentication Required"
+
+# TC4: Create new post
+CREATE_POST_DATA='{
+  "title": "Hỏi về gara uy tín khu vực Cầu Giấy",
+  "content": "Xe mình bị kêu lạ ở gầm. Những ai biết gara nào uy tín ở Cầu Giấy giúp mình với"
+}'
+
+test_endpoint \
+    "POST /community/posts (Create post)" \
+    "POST" \
+    "/community/posts" \
+    "$CREATE_POST_DATA" \
+    "201" \
+    "true"
+
+# TC5: Add comment to post
+COMMENT_DATA='{
+  "content": "Bạn thử qua Gara X ở đường Y xem, mình hay sửa ở đó. Anh chủ rất uy tín và giá cả phải chăng."
+}'
+
+test_endpoint \
+    "POST /community/posts/{postId}/comments (Add comment)" \
+    "POST" \
+    "/community/posts/$POST_ID/comments" \
+    "$COMMENT_DATA" \
+    "201" \
+    "true"
+
+# ─────────────────────────────────────────────────────────────────────────
+# VALIDATION TESTS
+# ─────────────────────────────────────────────────────────────────────────
+
+print_section "VALIDATION TESTS"
+
+# TC6: Create post with empty title
+EMPTY_TITLE_DATA='{
+  "title": "",
+  "content": "This is a content"
+}'
+
+test_endpoint \
+    "Create post with empty title (should fail)" \
+    "POST" \
+    "/community/posts" \
+    "$EMPTY_TITLE_DATA" \
+    "400" \
+    "true"
+
+# TC7: Create post with short content
+SHORT_CONTENT_DATA='{
+  "title": "Valid title here",
+  "content": "Short"
+}'
+
+test_endpoint \
+    "Create post with short content (should fail)" \
+    "POST" \
+    "/community/posts" \
+    "$SHORT_CONTENT_DATA" \
+    "400" \
+    "true"
+
+# TC8: Add empty comment
+EMPTY_COMMENT_DATA='{
+  "content": ""
+}'
+
+test_endpoint \
+    "Add empty comment (should fail)" \
+    "POST" \
+    "/community/posts/$POST_ID/comments" \
+    "$EMPTY_COMMENT_DATA" \
+    "400" \
+    "true"
+
+# ─────────────────────────────────────────────────────────────────────────
+# SECURITY TESTS
+# ─────────────────────────────────────────────────────────────────────────
+
+print_section "SECURITY & AUTHORIZATION TESTS"
+
+# TC9: Create post without token
+test_endpoint \
+    "POST without authentication (should fail)" \
+    "POST" \
+    "/community/posts" \
+    "$CREATE_POST_DATA" \
+    "401" \
+    "false"
+
+# TC10: Get non-existent post
+test_endpoint \
+    "GET non-existent post (should fail)" \
+    "GET" \
+    "/community/posts/999999" \
+    "" \
+    "404" \
+    "false"
+
+# ─────────────────────────────────────────────────────────────────────────
+# USE CASE FLOW TESTS
+# ─────────────────────────────────────────────────────────────────────────
+
+print_section "USE CASE FLOW - UC103 Workflow"
+
+# TC11: Create post about incident
+INCIDENT_POST_DATA='{
+  "title": "Xe thủng lốp giữa đường Cầu Giấy",
+  "content": "Xe mình bị thủng lốp sau bên phải khi đang chạy ở đường Cầu Giấy. Không có lốp dự phòng. Cần lời khuyên từ cộng đồng."
+}'
+
+test_endpoint \
+    "UC103 Step 1: Create incident post" \
+    "POST" \
+    "/community/posts" \
+    "$INCIDENT_POST_DATA" \
+    "201" \
+    "true"
+
+# TC12: View post (simulating Step 2: System displays post)
+test_endpoint \
+    "UC103 Step 2: System displays post to community" \
+    "GET" \
+    "/community/posts/$POST_ID" \
+    "" \
+    "200" \
+    "false"
+
+# TC13: Add advice comment (Step 3: Community provides advice)
+ADVICE_COMMENT_DATA='{
+  "content": "Xe bị thủng lốp lúc này thì bạn nên gọi số điện thoại công ty cứu hộ gần nhất. Bạn có thể dùng app ResQOnRoad để tìm công ty cứu hộ gần nhất. Họ sẽ đến trong 30 phút."
+}'
+
+test_endpoint \
+    "UC103 Step 3: Community provides advice" \
+    "POST" \
+    "/community/posts/$POST_ID/comments" \
+    "$ADVICE_COMMENT_DATA" \
+    "201" \
+    "true"
+
+# TC14: View post with comments (Step 4: System displays advice)
+test_endpoint \
+    "UC103 Step 4: System displays community advice" \
+    "GET" \
+    "/community/posts/$POST_ID/comments" \
+    "" \
+    "200" \
+    "false"
+
+# ─────────────────────────────────────────────────────────────────────────
+# EDGE CASES
+# ─────────────────────────────────────────────────────────────────────────
+
+print_section "EDGE CASES"
+
+# TC15: Create post with maximum length title
+LONG_TITLE_DATA='{
+  "title": "This is a very long title that tests the maximum length constraint for community posts in the UC103 feature implementation with extended content about car emergency situations on the road with professional mechanics and roadside assistance providers",
+  "content": "This is a valid content for testing edge cases with special characters and unicode support."
+}'
+
+test_endpoint \
+    "Create post with long title" \
+    "POST" \
+    "/community/posts" \
+    "$LONG_TITLE_DATA" \
+    "201" \
+    "true"
+
+# TC16: Add comment with special characters
+SPECIAL_COMMENT_DATA='{
+  "content": "Hãy thử dịch vụ cứu hộ 24/7 @ đường Cầu Giấy! Số điện thoại: 0243-123-456 #RescueService #VietnamRoads"
+}'
+
+test_endpoint \
+    "Add comment with special characters" \
+    "POST" \
+    "/community/posts/$POST_ID/comments" \
+    "$SPECIAL_COMMENT_DATA" \
+    "201" \
+    "true"
+
+# TC17: Add comment with Unicode (Vietnamese)
+UNICODE_COMMENT_DATA='{
+  "content": "Chuyên gia sửa xe ở Hà Nội khuyên là bạn nên kiểm tra áp suất lốp thường xuyên để tránh tình trạng này. Nếu lốp bị lão hóa cần thay thế sớm."
+}'
+
+test_endpoint \
+    "Add comment with Vietnamese Unicode" \
+    "POST" \
+    "/community/posts/$POST_ID/comments" \
+    "$UNICODE_COMMENT_DATA" \
+    "201" \
+    "true"
+
+# ═══════════════════════════════════════════════════════════════════════════
+#                           PRINT TEST SUMMARY
+# ═══════════════════════════════════════════════════════════════════════════
+
+print_summary
+exit_code=$?
+
+echo ""
+echo "Test execution completed at $(date '+%Y-%m-%d %H:%M:%S')"
+echo ""
+
+exit $exit_code

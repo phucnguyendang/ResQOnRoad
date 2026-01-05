@@ -31,7 +31,7 @@ function ServiceManagementView({ companyId, isAdmin = false }) {
         try {
             setLoading(true);
             setError(null);
-            
+
             const response = await ServiceService.getServicesByCompanyId(companyId);
             setServices(response.data || []);
         } catch (err) {
@@ -172,8 +172,8 @@ function ServiceManagementView({ companyId, isAdmin = false }) {
                 <div>
                     {/* Add service button */}
                     {isAdmin && (
-                        <button 
-                            onClick={() => setShowForm(true)} 
+                        <button
+                            onClick={() => setShowForm(true)}
                             className="btn btn-primary"
                             disabled={loading}
                         >
@@ -225,14 +225,14 @@ function ServiceManagementView({ companyId, isAdmin = false }) {
                                     {/* Action buttons */}
                                     {isAdmin && (
                                         <div className="service-actions">
-                                            <button 
+                                            <button
                                                 onClick={() => handleEdit(service)}
                                                 className="btn btn-sm btn-edit"
                                                 disabled={loading}
                                             >
                                                 ✎ Chỉnh sửa
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => handleDelete(service.id)}
                                                 className="btn btn-sm btn-delete"
                                                 disabled={loading}
@@ -358,15 +358,15 @@ function ServiceManagementView({ companyId, isAdmin = false }) {
 
                     {/* Form buttons */}
                     <div className="form-buttons">
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             className="btn btn-primary"
                             disabled={loading}
                         >
                             {editingService ? 'Cập nhật' : 'Thêm'} dịch vụ
                         </button>
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             onClick={handleCancel}
                             className="btn btn-secondary"
                             disabled={loading}
