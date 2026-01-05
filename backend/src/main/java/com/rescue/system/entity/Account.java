@@ -40,8 +40,14 @@ public class Account {
     @Column(name = "avatar_base64", columnDefinition = "TEXT")
     private String avatarBase64;
 
+    @Column(name = "company_id")
+    private Long companyId;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
+
+    @Column(name = "locked", nullable = false)
+    private boolean locked = false;
 
     public Long getId() {
         return id;
@@ -107,11 +113,27 @@ public class Account {
         this.avatarBase64 = avatarBase64;
     }
 
+    public Long getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Long companyId) {
+        this.companyId = companyId;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 }

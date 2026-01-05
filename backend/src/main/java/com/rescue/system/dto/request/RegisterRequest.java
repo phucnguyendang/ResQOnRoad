@@ -3,26 +3,31 @@ package com.rescue.system.dto.request;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotNull;
 
 public class RegisterRequest {
 
-    @NotBlank
-    @Size(min = 4, max = 100)
+    @NotBlank(message = "Username không được để trống")
+    @Size(min = 4, message = "Username phải có ít nhất 4 ký tự")
+    @Size(max = 100, message = "Username không được vượt quá 100 ký tự")
     private String username;
 
-    @NotBlank
-    @Size(min = 6, max = 100)
+    @NotBlank(message = "Password không được để trống")
+    @Size(min = 6, message = "Password phải có ít nhất 6 ký tự")
+    @Size(max = 100, message = "Password không được vượt quá 100 ký tự")
     private String password;
 
-    @NotBlank
-    @Size(max = 200)
+    @NotBlank(message = "Họ và tên không được để trống")
+    @Size(max = 100, message = "Full name không được vượt quá 100 ký tự")
     private String fullName;
 
-    @Size(max = 30)
+    @NotBlank(message = "Số điện thoại không được để trống")
+    @Pattern(regexp = "^0[0-9]{9,10}$", message = "Số điện thoại phải bắt đầu bằng 0 và có 10 hoặc 11 chữ số")
     private String phoneNumber;
 
-    @Email
-    @Size(max = 200)
+    @Email(message = "Email không hợp lệ")
+    @Size(max = 100, message = "Email không được vượt quá 100 ký tự")
     private String email;
 
     private String avatarBase64;

@@ -2,8 +2,10 @@ package com.rescue.system.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Size;
+import java.util.List;
 
 public class CreateRescueRequestDto {
     
@@ -11,18 +13,21 @@ public class CreateRescueRequestDto {
     private String location;
 
     @NotNull(message = "Latitude is required")
-    @Min(value = -90, message = "Latitude out of range [-90, 90]")
-    @Max(value = 90, message = "Latitude out of range [-90, 90]")
+    @DecimalMin(value = "-90.0", inclusive = true, message = "Latitude out of range [-90, 90]")
+    @DecimalMax(value = "90.0", inclusive = true, message = "Latitude out of range [-90, 90]")
     private Double latitude;
 
     @NotNull(message = "Longitude is required")
-    @Min(value = -180, message = "Longitude out of range [-180, 180]")
-    @Max(value = 180, message = "Longitude out of range [-180, 180]")
+    @DecimalMin(value = "-180.0", inclusive = true, message = "Longitude out of range [-180, 180]")
+    @DecimalMax(value = "180.0", inclusive = true, message = "Longitude out of range [-180, 180]")
     private Double longitude;
-
+    
     private String description;
 
     private String serviceType;
+
+    @Size(max = 10, message = "A maximum of 10 images are allowed")
+    private List<@NotBlank String> imagesBase64;
 
     public CreateRescueRequestDto() {
     }
@@ -71,5 +76,13 @@ public class CreateRescueRequestDto {
 
     public void setServiceType(String serviceType) {
         this.serviceType = serviceType;
+    }
+
+    public List<String> getImagesBase64() {
+        return imagesBase64;
+    }
+
+    public void setImagesBase64(List<String> imagesBase64) {
+        this.imagesBase64 = imagesBase64;
     }
 }

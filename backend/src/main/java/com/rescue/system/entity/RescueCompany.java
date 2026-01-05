@@ -59,6 +59,28 @@ public class RescueCompany {
     @Column(name = "is_verified")
     private Boolean isVerified = false;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "profile_status", length = 30)
+    private ProfileStatus profileStatus = ProfileStatus.INCOMPLETE;
+
+    @Column(name = "tax_code", length = 20)
+    private String taxCode;
+
+    @Column(name = "hotline", length = 20)
+    private String hotline;
+
+    @Column(name = "operating_hours", length = 100)
+    private String operatingHours;
+
+    @Column(name = "license_expiry_date")
+    private LocalDateTime licenseExpiryDate;
+
+    @Column(name = "license_document_url", length = 500)
+    private String licenseDocumentUrl;
+
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -212,6 +234,62 @@ public class RescueCompany {
 
     public void setIsVerified(Boolean isVerified) {
         this.isVerified = isVerified;
+    }
+
+    public ProfileStatus getProfileStatus() {
+        return profileStatus;
+    }
+
+    public void setProfileStatus(ProfileStatus profileStatus) {
+        this.profileStatus = profileStatus;
+    }
+
+    public String getTaxCode() {
+        return taxCode;
+    }
+
+    public void setTaxCode(String taxCode) {
+        this.taxCode = taxCode;
+    }
+
+    public String getHotline() {
+        return hotline;
+    }
+
+    public void setHotline(String hotline) {
+        this.hotline = hotline;
+    }
+
+    public String getOperatingHours() {
+        return operatingHours;
+    }
+
+    public void setOperatingHours(String operatingHours) {
+        this.operatingHours = operatingHours;
+    }
+
+    public LocalDateTime getLicenseExpiryDate() {
+        return licenseExpiryDate;
+    }
+
+    public void setLicenseExpiryDate(LocalDateTime licenseExpiryDate) {
+        this.licenseExpiryDate = licenseExpiryDate;
+    }
+
+    public String getLicenseDocumentUrl() {
+        return licenseDocumentUrl;
+    }
+
+    public void setLicenseDocumentUrl(String licenseDocumentUrl) {
+        this.licenseDocumentUrl = licenseDocumentUrl;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
     }
 
     public LocalDateTime getCreatedAt() {

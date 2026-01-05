@@ -13,6 +13,8 @@ import RescueRequestCreateView from './views/RescueRequestCreateView.jsx';
 import RescueRequestListView from './views/RescueRequestListView.jsx';
 import RescueRequestTrackView from './views/RescueRequestTrackView.jsx';
 import UserProfileView from './views/UserProfileView.jsx';
+import ChatView from './views/ChatView.jsx';
+import CompanyProfileView from './views/CompanyProfileView.jsx';
 
 import { clearAuth, loadAuth, saveAuth } from './utils/authStorage.js';
 
@@ -69,6 +71,8 @@ function App() {
         {currentView === 'requestList' && <RescueRequestListView onNavigate={handleNavigate} />}
         {currentView === 'requestDetail' && <RescueRequestTrackView onNavigate={handleNavigate} />}
         {currentView === 'profile' && <UserProfileView user={user} onUpdate={() => {}} />}
+        {currentView === 'chat' && <ChatView onNavigate={handleNavigate} />}
+        {currentView === 'companyProfile' && <CompanyProfileView onNavigate={handleNavigate} />}
       </div>
 
       {/* 3. Footer luôn hiển thị */}
