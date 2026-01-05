@@ -1,0 +1,680 @@
+#!/bin/bash
+
+################################################################################
+#                                                                              #
+#                  UC302 - SERVICE MANAGEMENT TEST SUITE                       #
+#                                                                              #
+#  Comprehensive test suite for Service Management API endpoints              #
+#  Includes: REST API tests, validation tests, security tests                 #
+#                                                                              #
+#  Usage: ./test_uc302                                                        #
+#  Or:    bash test_uc302                                                     #
+#                                                                              #
+#  Requirements:                                                              #
+#    - Backend server running on http://localhost:8080                        #
+#    - curl command-line tool                                                 #
+#    - Valid JWT token (can be obtained from login endpoint)                  #
+#                                                                              #
+################################################################################
+
+set -e
+
+# ═══════════════════════════════════════════════════════════════════════════
+#                              CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════
+
+BASE_URL="${BASE_URL:-http://localhost:8080/api}"
+COMPANY_ID="${COMPANY_ID:-1}"
+SERVICE_ID="${SERVICE_ID:-1}"
+
+# Mock JWT Token - Replace with actual token from login endpoint
+BEARER_TOKEN="${BEARER_TOKEN:-Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c}"
+
+# Colors for output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Test counters
+PASS_COUNT=0
+FAIL_COUNT=0
+TEST_NUM=0
+SKIP_COUNT=0
+
+# ═══════════════════════════════════════════════════════════════════════════
+#                            UTILITY FUNCTIONS
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Print colored output
+print_title() {
+    echo ""
+    echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}$1${NC}"
+    echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
+    echo ""
+}
+
+print_section() {
+    echo ""
+    echo -e "${YELLOW}────────────────────────────────────────────────────────────────${NC}"
+    echo -e "${YELLOW}$1${NC}"
+    echo -e "${YELLOW}────────────────────────────────────────────────────────────────${NC}"
+    echo ""
+}
+
+# Test function - makes API call and validates response
+test_endpoint() {
+    local test_name=$1
+    local method=$2
+    local endpoint=$3
+    local data=$4
+    local expected_status=$5
+    local require_auth=$6
+    
+    TEST_NUM=$((TEST_NUM + 1))
+    
+    # Check if server is running (first test only)
+    if [ $TEST_NUM -eq 1 ]; then
+        if ! curl -s "$BASE_URL/services/company/$COMPANY_ID" -o /dev/null 2>&1; then
+            echo -e "${RED}✗ ERROR: Cannot connect to $BASE_URL${NC}"
+            echo "   Please start the backend server: mvn spring-boot:run"
+            exit 1
+        fi
+    fi
+    
+    printf "Test %2d: %-50s " "$TEST_NUM" "$test_name"
+    
+    # Build curl command
+    local headers="-H 'Content-Type: application/json'"
+    [ "$require_auth" = "true" ] && headers="$headers -H 'Authorization: $BEARER_TOKEN'"
+    
+    local response
+    if [ -z "$data" ]; then
+        response=$(eval "curl -s -w '\\n%{http_code}' -X $method $headers '$BASE_URL$endpoint'")
+    else
+        response=$(eval "curl -s -w '\\n%{http_code}' -X $method $headers -d '$data' '$BASE_URL$endpoint'")
+    fi
+    
+    # Extract status code (last line)
+    local status=$(echo "$response" | tail -n1)
+    local body=$(echo "$response" | head -n-1)
+    
+    # Validate response
+    if [ "$status" = "$expected_status" ]; then
+        echo -e "${GREEN}✓ PASS${NC} (HTTP $status)"
+        PASS_COUNT=$((PASS_COUNT + 1))
+        return 0
+    else
+        echo -e "${RED}✗ FAIL${NC} (Expected HTTP $expected_status, got $status)"
+        echo "   Response: $(echo "$body" | head -c 80)..."
+        FAIL_COUNT=$((FAIL_COUNT + 1))
+        return 1
+    fi
+}
+
+# Print test summary
+print_summary() {
+    local total=$((PASS_COUNT + FAIL_COUNT))
+    
+    echo ""
+    print_title "TEST SUMMARY"
+    
+    echo "Total Tests:  $total"
+    echo -e "Passed:       ${GREEN}$PASS_COUNT${NC}"
+    echo -e "Failed:       ${RED}$FAIL_COUNT${NC}"
+    echo -e "Skipped:      ${YELLOW}$SKIP_COUNT${NC}"
+    echo ""
+    
+    if [ $FAIL_COUNT -eq 0 ]; then
+        echo -e "${GREEN}✓ ALL TESTS PASSED!${NC}"
+        echo "UC302 Service Management API is working correctly."
+        return 0
+    else
+        echo -e "${RED}✗ SOME TESTS FAILED${NC}"
+        echo "Please review the failed tests above."
+        return 1
+    fi
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+#                              TEST EXECUTION
+# ═══════════════════════════════════════════════════════════════════════════
+
+print_title "UC302 - SERVICE MANAGEMENT TEST SUITE"
+
+echo "Configuration:"
+echo "  Base URL:     $BASE_URL"
+echo "  Company ID:   $COMPANY_ID"
+echo "  Service ID:   $SERVICE_ID"
+echo ""
+
+# ─────────────────────────────────────────────────────────────────────────
+# PUBLIC ENDPOINTS (No authentication required)
+# ─────────────────────────────────────────────────────────────────────────
+
+print_section "PUBLIC ENDPOINTS - No Authentication Required"
+
+# TC1: Get all services for a company
+test_endpoint \
+    "GET /api/services/company/{companyId}" \
+    "GET" \
+    "/services/company/$COMPANY_ID" \
+    "" \
+    "200" \
+    "false"
+
+# TC2: Get service detail
+test_endpoint \
+    "GET /api/services/{serviceId}" \
+    "GET" \
+    "/services/$SERVICE_ID" \
+    "" \
+    "200" \
+    "false"
+
+# TC3: Get available services
+test_endpoint \
+    "GET /api/services/company/{companyId}/available" \
+    "GET" \
+    "/services/company/$COMPANY_ID/available" \
+    "" \
+    "200" \
+    "false"
+
+# ─────────────────────────────────────────────────────────────────────────
+# PROTECTED ENDPOINTS - Authentication required
+# ─────────────────────────────────────────────────────────────────────────
+
+print_section "PROTECTED ENDPOINTS - JWT Authentication Required"
+
+# TC4: Get my company services
+test_endpoint \
+    "GET /api/services/company/my (Authenticated)" \
+    "GET" \
+    "/services/company/my" \
+    "" \
+    "200" \
+    "true"
+
+# TC5: Create service - TOW_TRUCK
+CREATE_TOW_DATA='{
+  "name": "24/7 Emergency Tow",
+  "description": "Professional towing service",
+  "type": "TOW_TRUCK",
+  "basePrice": 500000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 45
+}'
+
+test_endpoint \
+    "POST /api/services (TOW_TRUCK)" \
+    "POST" \
+    "/services" \
+    "$CREATE_TOW_DATA" \
+    "201" \
+    "true"
+
+# TC6: Create service - TIRE_CHANGE
+CREATE_TIRE_DATA='{
+  "name": "Quick Tire Change",
+  "description": "Professional tire replacement",
+  "type": "TIRE_CHANGE",
+  "basePrice": 250000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 20
+}'
+
+test_endpoint \
+    "POST /api/services (TIRE_CHANGE)" \
+    "POST" \
+    "/services" \
+    "$CREATE_TIRE_DATA" \
+    "201" \
+    "true"
+
+# TC7: Create service - BATTERY_JUMP
+CREATE_BATTERY_DATA='{
+  "name": "Battery Jump Start",
+  "description": "Fast battery jump start service",
+  "type": "BATTERY_JUMP",
+  "basePrice": 150000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 15
+}'
+
+test_endpoint \
+    "POST /api/services (BATTERY_JUMP)" \
+    "POST" \
+    "/services" \
+    "$CREATE_BATTERY_DATA" \
+    "201" \
+    "true"
+
+# TC8: Create service - FUEL_DELIVERY
+CREATE_FUEL_DATA='{
+  "name": "Fuel Delivery 24/7",
+  "description": "Emergency fuel delivery service",
+  "type": "FUEL_DELIVERY",
+  "basePrice": 200000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 30
+}'
+
+test_endpoint \
+    "POST /api/services (FUEL_DELIVERY)" \
+    "POST" \
+    "/services" \
+    "$CREATE_FUEL_DATA" \
+    "201" \
+    "true"
+
+# TC9: Create service - LOCKOUT
+CREATE_LOCKOUT_DATA='{
+  "name": "Unlock Service",
+  "description": "Professional car unlock service",
+  "type": "LOCKOUT",
+  "basePrice": 180000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 25
+}'
+
+test_endpoint \
+    "POST /api/services (LOCKOUT)" \
+    "POST" \
+    "/services" \
+    "$CREATE_LOCKOUT_DATA" \
+    "201" \
+    "true"
+
+# TC10: Create service - WINCH_OUT
+CREATE_WINCH_DATA='{
+  "name": "Winch Out Service",
+  "description": "Professional winch extraction service",
+  "type": "WINCH_OUT",
+  "basePrice": 600000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 60
+}'
+
+test_endpoint \
+    "POST /api/services (WINCH_OUT)" \
+    "POST" \
+    "/services" \
+    "$CREATE_WINCH_DATA" \
+    "201" \
+    "true"
+
+# TC11: Create service - ACCIDENT_RECOVERY
+CREATE_ACCIDENT_DATA='{
+  "name": "Accident Recovery",
+  "description": "Full accident scene recovery service",
+  "type": "ACCIDENT_RECOVERY",
+  "basePrice": 1000000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 120
+}'
+
+test_endpoint \
+    "POST /api/services (ACCIDENT_RECOVERY)" \
+    "POST" \
+    "/services" \
+    "$CREATE_ACCIDENT_DATA" \
+    "201" \
+    "true"
+
+# TC12: Create service - MECHANICAL_REPAIR
+CREATE_MECHANICAL_DATA='{
+  "name": "Field Mechanical Repair",
+  "description": "Quick mechanical repair on the road",
+  "type": "MECHANICAL_REPAIR",
+  "basePrice": 350000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 45
+}'
+
+test_endpoint \
+    "POST /api/services (MECHANICAL_REPAIR)" \
+    "POST" \
+    "/services" \
+    "$CREATE_MECHANICAL_DATA" \
+    "201" \
+    "true"
+
+# TC13: Update service - Partial update
+UPDATE_DATA='{
+  "basePrice": 550000,
+  "estimatedTime": 40
+}'
+
+test_endpoint \
+    "PUT /api/services/{serviceId} (Partial Update)" \
+    "PUT" \
+    "/services/$SERVICE_ID" \
+    "$UPDATE_DATA" \
+    "200" \
+    "true"
+
+# TC14: Update service - Full update
+UPDATE_FULL_DATA='{
+  "name": "Updated Tow Service",
+  "description": "Updated description",
+  "basePrice": 600000,
+  "estimatedTime": 50,
+  "isAvailable": false
+}'
+
+test_endpoint \
+    "PUT /api/services/{serviceId} (Full Update)" \
+    "PUT" \
+    "/services/$SERVICE_ID" \
+    "$UPDATE_FULL_DATA" \
+    "200" \
+    "true"
+
+# TC15: Delete service
+test_endpoint \
+    "DELETE /api/services/{serviceId}" \
+    "DELETE" \
+    "/services/$SERVICE_ID" \
+    "" \
+    "200" \
+    "true"
+
+# ─────────────────────────────────────────────────────────────────────────
+# VALIDATION TESTS
+# ─────────────────────────────────────────────────────────────────────────
+
+print_section "VALIDATION TESTS - Invalid Input Handling"
+
+# TC16: Invalid service type
+INVALID_TYPE_DATA='{
+  "name": "Test Service",
+  "description": "Test",
+  "type": "INVALID_TYPE",
+  "basePrice": 100000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 30
+}'
+
+test_endpoint \
+    "Create with invalid type (should fail)" \
+    "POST" \
+    "/services" \
+    "$INVALID_TYPE_DATA" \
+    "400" \
+    "true"
+
+# TC17: Negative price
+NEGATIVE_PRICE_DATA='{
+  "name": "Test Service",
+  "description": "Test",
+  "type": "TOW_TRUCK",
+  "basePrice": -50000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 30
+}'
+
+test_endpoint \
+    "Create with negative price (should fail)" \
+    "POST" \
+    "/services" \
+    "$NEGATIVE_PRICE_DATA" \
+    "400" \
+    "true"
+
+# TC18: Empty name
+EMPTY_NAME_DATA='{
+  "name": "",
+  "description": "Test",
+  "type": "TOW_TRUCK",
+  "basePrice": 100000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 30
+}'
+
+test_endpoint \
+    "Create with empty name (should fail)" \
+    "POST" \
+    "/services" \
+    "$EMPTY_NAME_DATA" \
+    "400" \
+    "true"
+
+# TC19: Zero price
+ZERO_PRICE_DATA='{
+  "name": "Test Service",
+  "description": "Test",
+  "type": "TOW_TRUCK",
+  "basePrice": 0,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 30
+}'
+
+test_endpoint \
+    "Create with zero price (should fail)" \
+    "POST" \
+    "/services" \
+    "$ZERO_PRICE_DATA" \
+    "400" \
+    "true"
+
+# TC20: Negative estimated time
+NEGATIVE_TIME_DATA='{
+  "name": "Test Service",
+  "description": "Test",
+  "type": "TOW_TRUCK",
+  "basePrice": 100000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": -30
+}'
+
+test_endpoint \
+    "Create with negative time (should fail)" \
+    "POST" \
+    "/services" \
+    "$NEGATIVE_TIME_DATA" \
+    "400" \
+    "true"
+
+# ─────────────────────────────────────────────────────────────────────────
+# SECURITY & AUTHORIZATION TESTS
+# ─────────────────────────────────────────────────────────────────────────
+
+print_section "SECURITY & AUTHORIZATION TESTS"
+
+# TC21: Missing authentication token
+CREATE_DATA='{
+  "name": "Unauthorized Test",
+  "description": "Test",
+  "type": "TOW_TRUCK",
+  "basePrice": 100000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 30
+}'
+
+test_endpoint \
+    "POST without token (should fail - 401)" \
+    "POST" \
+    "/services" \
+    "$CREATE_DATA" \
+    "401" \
+    "false"
+
+# TC22: Invalid token format
+printf "Test %2d: %-50s " "$((TEST_NUM + 1))" "POST with invalid token format"
+TEST_NUM=$((TEST_NUM + 1))
+
+response=$(curl -s -w '\n%{http_code}' -X POST \
+  -H "Authorization: InvalidToken" \
+  -H "Content-Type: application/json" \
+  -d "$CREATE_DATA" \
+  "$BASE_URL/services")
+
+status=$(echo "$response" | tail -n1)
+
+if [ "$status" = "401" ] || [ "$status" = "403" ]; then
+    echo -e "${GREEN}✓ PASS${NC} (HTTP $status)"
+    PASS_COUNT=$((PASS_COUNT + 1))
+else
+    echo -e "${RED}✗ FAIL${NC} (Expected 401/403, got $status)"
+    FAIL_COUNT=$((FAIL_COUNT + 1))
+fi
+
+# TC23: GET non-existent service
+test_endpoint \
+    "GET non-existent service (should fail - 404)" \
+    "GET" \
+    "/services/999999" \
+    "" \
+    "404" \
+    "false"
+
+# TC24: UPDATE non-existent service
+UPDATE_DATA='{
+  "basePrice": 200000
+}'
+
+test_endpoint \
+    "PUT non-existent service (should fail - 404)" \
+    "PUT" \
+    "/services/999999" \
+    "$UPDATE_DATA" \
+    "404" \
+    "true"
+
+# TC25: DELETE non-existent service
+test_endpoint \
+    "DELETE non-existent service (should fail - 404)" \
+    "DELETE" \
+    "/services/999999" \
+    "" \
+    "404" \
+    "true"
+
+# ─────────────────────────────────────────────────────────────────────────
+# EDGE CASES & SPECIAL SCENARIOS
+# ─────────────────────────────────────────────────────────────────────────
+
+print_section "EDGE CASES & SPECIAL SCENARIOS"
+
+# TC26: Create service with maximum length name
+LONG_NAME_DATA='{
+  "name": "This is a very long service name to test maximum length validation This is a very long service name to test maximum length validation",
+  "description": "Test description",
+  "type": "TOW_TRUCK",
+  "basePrice": 100000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 30
+}'
+
+test_endpoint \
+    "Create with long name (edge case)" \
+    "POST" \
+    "/services" \
+    "$LONG_NAME_DATA" \
+    "201" \
+    "true"
+
+# TC27: Create service with special characters
+SPECIAL_CHARS_DATA='{
+  "name": "Tow & Repair (24/7)",
+  "description": "Service with special chars: @#$%^&*()",
+  "type": "TOW_TRUCK",
+  "basePrice": 100000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 30
+}'
+
+test_endpoint \
+    "Create with special characters" \
+    "POST" \
+    "/services" \
+    "$SPECIAL_CHARS_DATA" \
+    "201" \
+    "true"
+
+# TC28: Create service with Unicode characters
+UNICODE_DATA='{
+  "name": "Dịch vụ cứu hộ 24/7 - Đà Nẵng",
+  "description": "خدمة الإنقاذ على الطريق السريع",
+  "type": "TOW_TRUCK",
+  "basePrice": 100000,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 30
+}'
+
+test_endpoint \
+    "Create with Unicode characters (Vietnamese)" \
+    "POST" \
+    "/services" \
+    "$UNICODE_DATA" \
+    "201" \
+    "true"
+
+# TC29: Create service with high price value
+HIGH_PRICE_DATA='{
+  "name": "Premium Tow Service",
+  "description": "High-end towing service",
+  "type": "TOW_TRUCK",
+  "basePrice": 999999999,
+  "priceUnit": "VND",
+  "isAvailable": true,
+  "estimatedTime": 30
+}'
+
+test_endpoint \
+    "Create with very high price (edge case)" \
+    "POST" \
+    "/services" \
+    "$HIGH_PRICE_DATA" \
+    "201" \
+    "true"
+
+# TC30: Create and update service status
+STATUS_UPDATE_DATA='{
+  "isAvailable": false
+}'
+
+test_endpoint \
+    "Update service availability status" \
+    "PUT" \
+    "/services/$SERVICE_ID" \
+    "$STATUS_UPDATE_DATA" \
+    "200" \
+    "true"
+
+# ═══════════════════════════════════════════════════════════════════════════
+#                           PRINT TEST SUMMARY
+# ═══════════════════════════════════════════════════════════════════════════
+
+print_summary
+exit_code=$?
+
+# ═══════════════════════════════════════════════════════════════════════════
+#                         TEST EXECUTION COMPLETE
+# ═══════════════════════════════════════════════════════════════════════════
+
+echo ""
+echo "Test execution completed at $(date '+%Y-%m-%d %H:%M:%S')"
+echo ""
+
+exit $exit_code
