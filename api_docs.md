@@ -81,46 +81,98 @@ Dựa trên Use Case 402 .
 
 Dựa trên Use Case 202 . API trả về danh sách công ty kèm khoảng cách tính toán từ vị trí người dùng.
 
-* **Endpoint:** `GET /companies/search`
-* **Query Params:**
+Backend hiện có cả 2 kiểu gọi:
+
+* **GET:** `GET /api/companies/search?lat={lat}&lng={lng}&maxDistance={km}&page={page}&size={size}`
+* **POST:** `POST /api/companies/search`
+
+Trong đó:
+
 * `lat`: 21.0285 (Vĩ độ người dùng)
 * `lng`: 105.8542 (Kinh độ người dùng)
-* `service_type`: "Vá lốp" (Tùy chọn)
+* `maxDistance`: 50.0 (km, mặc định 50)
+* `page`: 0 (mặc định 0)
+* `size`: 20 (mặc định 20)
 
 
-* **Response (200 OK):**
+* **Response (200 OK)** (`ApiResponse<Page<CompanySearchResponse>>`):
 ```json
 {
-  "data": [
-    {
-      "id": 50,
-      "company_name": "Cứu hộ Ba Đình",
-      "phone": "0243123456",
-      "rating_avg": 4.8,
-      "distance_km": 1.2, // Khoảng cách tính toán
-      "location": {
-        "lat": 21.0300,
-        "lng": 105.8500
-      },
-      "services": [
-        { "name": "Vá lốp", "price": 150000 },
-        { "name": "Kích bình", "price": 100000 }
-      ]
-    },
-    {
-      "id": 52,
-      "company_name": "Gara Ô tô 247",
-      "phone": "0909000111",
-      "rating_avg": 4.2,
-      "distance_km": 3.5,
-      "location": {
-        "lat": 21.0500,
-        "lng": 105.8600
+  "status": 200,
+  "message": "Tìm thấy 2 công ty cứu hộ gần bạn",
+  "data": {
+    "content": [
+      {
+        "id": 50,
+        "name": "Cứu hộ Ba Đình",
+        "address": "...",
+        "phone": "0243123456",
+        "email": "...",
+        "distance": 1.2,
+        "averageRating": 4.8,
+        "totalReviews": 120,
+        "isAvailable": true,
+        "isVerified": true,
+        "description": "...",
+        "services": [
+          { "id": 1, "name": "Vá lốp", "type": "TIRE", "typeDisplayName": "Vá lốp", "basePrice": 150000, "priceUnit": "VND", "isAvailable": true, "estimatedTime": 15 },
+          { "id": 2, "name": "Kích bình", "type": "BATTERY", "typeDisplayName": "Kích bình", "basePrice": 100000, "priceUnit": "VND", "isAvailable": true, "estimatedTime": 10 }
+        ],
+        "latitude": 21.0300,
+        "longitude": 105.8500
       }
-    }
-  ]
+    ],
+    "totalElements": 2,
+    "totalPages": 1,
+    "number": 0,
+    "size": 20
+  }
 }
 
+```
+
+
+### 3.1.2. Lấy hồ sơ công ty cứu hộ (Company Detail + Reviews)
+
+> Dùng cho màn hình "Hồ sơ công ty" phía người dùng. Backend trả về luôn rating + danh sách reviews.
+
+* **Endpoint:** `GET /api/companies/{companyId}`
+
+* **Response (200 OK)** (`ApiResponse<CompanyDetailResponse>`):
+```json
+{
+  "status": 200,
+  "message": "Lấy thông tin công ty thành công",
+  "data": {
+    "id": 50,
+    "name": "Cứu hộ Ba Đình",
+    "address": "...",
+    "phone": "0243123456",
+    "email": "...",
+    "latitude": 21.0300,
+    "longitude": 105.8500,
+    "serviceRadius": 50.0,
+    "isActive": true,
+    "isVerified": true,
+    "averageRating": 4.8,
+    "totalReviews": 120,
+    "description": "...",
+    "businessLicense": "...",
+    "services": [
+      { "id": 1, "name": "Vá lốp", "type": "TIRE", "typeDisplayName": "Vá lốp", "basePrice": 150000, "priceUnit": "VND", "isAvailable": true, "estimatedTime": 15 }
+    ],
+    "reviews": [
+      {
+        "id": 9001,
+        "userName": "Nguyễn Văn A",
+        "rating": 5,
+        "comment": "Tới nhanh, xử lý chuyên nghiệp.",
+        "isVerified": true,
+        "createdAt": "2025-01-15T08:30:00Z"
+      }
+    ]
+  }
+}
 ```
 
 
@@ -162,7 +214,7 @@ Chỉ cho phép khi yêu cầu cứu hộ đã ở trạng thái `COMPLETED`.
 }
 ```
 
-### 3.2.2. (Tuỳ chọn) Lấy danh sách đánh giá của công ty
+### 3.2.2.  Lấy danh sách đánh giá của công ty
 
 * **Endpoint:** `GET /api/companies/{companyId}/reviews?page=1&limit=10`
 * **Response (200 OK):**

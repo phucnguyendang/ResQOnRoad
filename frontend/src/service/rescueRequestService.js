@@ -62,7 +62,7 @@ export async function createRescueRequestMock({
   const createdAt = new Date().toISOString();
   const request = {
     id,
-    status: 'PENDING_CONFIRMATION',
+    status: 'COMPLETED',
     createdAt,
     updatedAt: createdAt,
     companyId: company_id ? Number(company_id) : null,

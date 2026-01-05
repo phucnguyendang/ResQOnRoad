@@ -15,3 +15,9 @@ export async function searchNearbyCompanies({ lat, lng, maxDistance = 50.0, page
   const res = await apiRequest(`/api/companies/search${query}`, { method: 'GET' });
   return res.data; // Spring Page<CompanySearchResponse>
 }
+
+export async function getCompanyDetail(companyId) {
+  if (companyId == null || companyId === '') throw new Error('companyId là bắt buộc');
+  const res = await apiRequest(`/api/companies/${encodeURIComponent(String(companyId))}`, { method: 'GET' });
+  return res.data; // CompanyDetailResponse
+}
