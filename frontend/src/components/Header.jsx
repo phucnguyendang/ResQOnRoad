@@ -49,6 +49,7 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
           {user?.role === 'ADMIN' && (
             <>
               <button onClick={() => onNavigate('adminCompanyRegistrations')} className={`hover:text-yellow-400 ${currentView === 'adminCompanyRegistrations' ? 'text-yellow-400 font-semibold' : ''}`}>Duyệt công ty</button>
+              <button onClick={() => onNavigate('adminWorkflows')} className={`hover:text-yellow-400 ${currentView === 'adminWorkflows' ? 'text-yellow-400 font-semibold' : ''}`}>Quy trình</button>
               <button onClick={() => onNavigate('moderation')} className={`hover:text-yellow-400 ${currentView === 'moderation' ? 'text-yellow-400 font-semibold' : ''}`}>Kiểm duyệt</button>
             </>
           )}
@@ -127,6 +128,7 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
           {user?.role === 'ADMIN' && (
             <>
               <button onClick={() => { onNavigate('adminCompanyRegistrations'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Duyệt công ty</button>
+              <button onClick={() => { onNavigate('adminWorkflows'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Quy trình</button>
               <button onClick={() => { onNavigate('moderation'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Kiểm duyệt</button>
             </>
           )}

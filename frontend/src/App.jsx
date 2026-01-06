@@ -21,6 +21,7 @@ import VehicleManagementView from './views/VehicleManagementView.jsx';
 import CompanyRegistrationCreateView from './views/CompanyRegistrationCreateView.jsx';
 import CompanyRegistrationStatusView from './views/CompanyRegistrationStatusView.jsx';
 import AdminCompanyRegistrationsView from './views/AdminCompanyRegistrationsView.jsx';
+import AdminWorkflowView from './views/AdminWorkflowView.jsx';
 import ModerationView from './views/ModerationView.jsx';
 
 import { clearAuth, loadAuth, saveAuth } from './utils/authStorage.js';
@@ -99,6 +100,7 @@ function App() {
         {currentView === 'companyRegistration' && <CompanyRegistrationCreateView onNavigate={handleNavigate} />}
         {currentView === 'companyRegistrationStatus' && <CompanyRegistrationStatusView onNavigate={handleNavigate} />}
         {currentView === 'adminCompanyRegistrations' && <AdminCompanyRegistrationsView onNavigate={handleNavigate} />}
+        {currentView === 'adminWorkflows' && <AdminWorkflowView onNavigate={handleNavigate} />}
         {currentView === 'moderation' && <ModerationView onNavigate={handleNavigate} />}
       </div>
 
