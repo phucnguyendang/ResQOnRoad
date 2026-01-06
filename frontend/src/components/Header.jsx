@@ -47,7 +47,10 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
             <button onClick={() => onNavigate('companyRegistration')} className={`hover:text-yellow-400 ${currentView === 'companyRegistration' ? 'text-yellow-400 font-semibold' : ''}`}>Đăng ký công ty</button>
           )}
           {user?.role === 'ADMIN' && (
-            <button onClick={() => onNavigate('adminCompanyRegistrations')} className={`hover:text-yellow-400 ${currentView === 'adminCompanyRegistrations' ? 'text-yellow-400 font-semibold' : ''}`}>Duyệt công ty</button>
+            <>
+              <button onClick={() => onNavigate('adminCompanyRegistrations')} className={`hover:text-yellow-400 ${currentView === 'adminCompanyRegistrations' ? 'text-yellow-400 font-semibold' : ''}`}>Duyệt công ty</button>
+              <button onClick={() => onNavigate('moderation')} className={`hover:text-yellow-400 ${currentView === 'moderation' ? 'text-yellow-400 font-semibold' : ''}`}>Kiểm duyệt</button>
+            </>
           )}
           {user?.role === 'COMPANY' && (
             <button className="hover:text-yellow-400">Dịch vụ</button>
@@ -122,7 +125,10 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
             <button onClick={() => { onNavigate('companyRegistration'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Đăng ký công ty</button>
           )}
           {user?.role === 'ADMIN' && (
-            <button onClick={() => { onNavigate('adminCompanyRegistrations'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Duyệt công ty</button>
+            <>
+              <button onClick={() => { onNavigate('adminCompanyRegistrations'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Duyệt công ty</button>
+              <button onClick={() => { onNavigate('moderation'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Kiểm duyệt</button>
+            </>
           )}
           {user?.role === 'COMPANY' && (
             <button className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Dịch vụ</button>
