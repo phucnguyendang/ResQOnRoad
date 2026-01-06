@@ -10,6 +10,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     Optional<Account> findByUsername(String username);
     boolean existsByUsername(String username);
 
+    long countByLockedTrue();
+
     List<Account> findByCompanyIdIsNotNull();
 
     List<Account> findByCompanyIdAndRole(Long companyId, Role role);

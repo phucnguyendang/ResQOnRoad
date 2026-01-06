@@ -84,6 +84,11 @@ public interface CommunityService {
     CommunityPostDto markPostAsResolved(Long postId, Long authorId);
 
     /**
+     * Open/Close comments for a post
+     */
+    CommunityPostDto setPostResolved(Long postId, Long actorId, boolean resolved);
+
+    /**
      * Delete a post
      */
     void deletePost(Long postId, Long authorId);
@@ -126,6 +131,11 @@ public interface CommunityService {
      * Delete a comment
      */
     void deleteComment(Long commentId, Long authorId);
+
+    /**
+     * Close a comment (prevent further interaction)
+     */
+    CommunityCommentDto closeComment(Long commentId, Long actorId);
 
     /**
      * Get helpful comments for a post

@@ -1,9 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   addCommunityComment,
+  closeCommunityComment,
+  closeCommunityPostComments,
   createCommunityPost,
+  deleteCommunityComment,
+  deleteCommunityPost,
   getCommunityComments,
   getCommunityPosts,
+  openCommunityPostComments,
 } from '../service/communityService';
 
 function formatDateTime(value) {
@@ -44,6 +49,115 @@ const CommunityView = ({ onNavigate, user }) => {
   const [commentsError, setCommentsError] = useState({});
   const [sendError, setSendError] = useState({});
   const [commentSending, setCommentSending] = useState({});
+
+  const isAdmin = useMemo(() => {
+    if (!user) return false;
+    if (user.roles?.includes('ROLE_ADMIN')) return true;
+    if (String(user.role || '').toUpperCase() === 'ADMIN') return true;
+    return false;
+  }, [user]);
+
+  function canManagePost(post) {
+    if (!user || !post) return false;
+    if (isAdmin) return true;
+    const myId = user.accountId ?? user.account_id;
+    const authorId = post?.author?.id;
+    return myId != null && authorId != null && String(myId) === String(authorId);
+  }
+
+  function canManageComment(comment) {
+    if (!user || !comment) return false;
+    if (isAdmin) return true;
+    const myId = user.accountId ?? user.account_id;
+    const authorId = comment?.author?.id;
+    return myId != null && authorId != null && String(myId) === String(authorId);
+  }
+
+  async function handleDeletePost(postId) {
+    if (!postId) return;
+    const ok = window.confirm('Bạn có chắc muốn xóa bài đăng này?');
+    if (!ok) return;
+
+    try {
+      await deleteCommunityPost(postId);
+      setPostsPage((prev) => {
+        const content = Array.isArray(prev?.content) ? prev.content : [];
+        return { ...prev, content: content.filter((p) => String(p?.id) !== String(postId)) };
+      });
+    } catch (e) {
+      setFeedError(e?.message || 'Không thể xóa bài đăng.');
+      if (e?.status === 401) onNavigate?.('login');
+    }
+  }
+
+  async function handleTogglePostComments(post) {
+    const postId = post?.id;
+    if (!postId) return;
+
+    const isCurrentlyClosed = Boolean(post?.isResolved);
+    const ok = window.confirm(isCurrentlyClosed ? 'Mở bình luận cho bài đăng này?' : 'Đóng bình luận cho bài đăng này?');
+    if (!ok) return;
+
+    try {
+      const updated = isCurrentlyClosed
+        ? await openCommunityPostComments(postId)
+        : await closeCommunityPostComments(postId);
+
+      setPostsPage((prev) => {
+        const content = Array.isArray(prev?.content) ? prev.content : [];
+        return {
+          ...prev,
+          content: content.map((p) => (String(p?.id) === String(postId) ? { ...p, ...updated } : p)),
+        };
+      });
+    } catch (e) {
+      setFeedError(e?.message || (isCurrentlyClosed ? 'Không thể mở bình luận.' : 'Không thể đóng bình luận.'));
+      if (e?.status === 401) onNavigate?.('login');
+    }
+  }
+
+  async function handleDeleteComment(postId, commentId) {
+    if (!commentId) return;
+    const ok = window.confirm('Bạn có chắc muốn xóa bình luận này?');
+    if (!ok) return;
+
+    try {
+      await deleteCommunityComment(commentId);
+      setCommentsByPostId((prev) => {
+        const existing = Array.isArray(prev?.[postId]) ? prev[postId] : [];
+        return { ...prev, [postId]: existing.filter((c) => String(c?.id) !== String(commentId)) };
+      });
+    } catch (e) {
+      setCommentsError((prev) => ({
+        ...prev,
+        [postId]: e?.message || 'Không thể xóa bình luận.',
+      }));
+      if (e?.status === 401) onNavigate?.('login');
+    }
+  }
+
+  async function handleCloseComment(postId, commentId) {
+    if (!commentId) return;
+    const ok = window.confirm('Đóng bình luận này?');
+    if (!ok) return;
+
+    try {
+      const updated = await closeCommunityComment(commentId);
+      setCommentsByPostId((prev) => {
+        const existing = Array.isArray(prev?.[postId]) ? prev[postId] : [];
+        return {
+          ...prev,
+          [postId]: existing.map((c) => (String(c?.id) === String(commentId) ? { ...c, ...updated } : c)),
+        };
+      });
+    } catch (e) {
+      setCommentsError((prev) => ({
+        ...prev,
+        [postId]: e?.message || 'Không thể đóng bình luận.',
+      }));
+      if (e?.status === 401) onNavigate?.('login');
+    }
+  }
 
   const posts = useMemo(() => {
     const content = postsPage?.content;
@@ -295,6 +409,8 @@ const CommunityView = ({ onNavigate, user }) => {
             const draft = commentDraft[postId] || '';
             const sending = !!commentSending[postId];
             const sError = sendError[postId] || '';
+            const isResolved = !!post?.isResolved;
+            const showPostActions = canManagePost(post);
 
             return (
               <article key={postId} className="bg-white rounded shadow-sm p-4">
@@ -323,11 +439,32 @@ const CommunityView = ({ onNavigate, user }) => {
                     </div>
                   </div>
 
-                  {post?.isResolved ? (
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Đã giải quyết</span>
-                  ) : (
-                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Đang mở</span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {isResolved ? (
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Đã đóng bình luận</span>
+                    ) : (
+                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Đang mở</span>
+                    )}
+
+                    {showPostActions ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleTogglePostComments(post)}
+                          className="text-xs px-2 py-1 rounded border border-blue-900 text-blue-900 hover:bg-blue-50"
+                        >
+                          {isResolved ? 'Mở bình luận' : 'Đóng bình luận'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePost(postId)}
+                          className="text-xs px-2 py-1 rounded border border-red-600 text-red-600 hover:bg-red-50"
+                        >
+                          Xóa bài
+                        </button>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
 
                 <h2 className="mt-3 text-lg font-bold text-gray-900">{post?.title}</h2>
@@ -379,8 +516,32 @@ const CommunityView = ({ onNavigate, user }) => {
                           </div>
                           <div className="flex-1">
                             <div className="bg-gray-50 border rounded px-3 py-2">
-                              <div className="text-sm font-semibold text-gray-800">
-                                {c?.author?.fullName || c?.author?.username || 'Ẩn danh'}
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="text-sm font-semibold text-gray-800">
+                                  {c?.author?.fullName || c?.author?.username || 'Ẩn danh'}
+                                </div>
+                                {canManageComment(c) ? (
+                                  <div className="flex items-center gap-2">
+                                    {!c?.isClosed ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCloseComment(postId, c?.id)}
+                                        className="text-xs text-blue-900 hover:underline"
+                                      >
+                                        Đóng
+                                      </button>
+                                    ) : (
+                                      <span className="text-xs text-gray-500">Đã đóng</span>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteComment(postId, c?.id)}
+                                      className="text-xs text-red-600 hover:underline"
+                                    >
+                                      Xóa
+                                    </button>
+                                  </div>
+                                ) : null}
                               </div>
                               <div className="text-sm text-gray-800 whitespace-pre-wrap">{c?.content}</div>
                             </div>
@@ -403,14 +564,14 @@ const CommunityView = ({ onNavigate, user }) => {
                             onChange={(e) =>
                               setCommentDraft((prev) => ({ ...prev, [postId]: e.target.value }))
                             }
-                            placeholder="Viết bình luận..."
+                            placeholder={isResolved ? 'Bài đăng đã đóng bình luận.' : 'Viết bình luận...'}
                             className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring"
-                            disabled={sending}
+                            disabled={sending || isResolved}
                           />
                           <button
                             type="button"
                             onClick={() => handleSendComment(postId)}
-                            disabled={sending}
+                            disabled={sending || isResolved}
                             className="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800 disabled:opacity-60"
                           >
                             {sending ? 'Đang gửi...' : 'Gửi'}
@@ -430,6 +591,9 @@ const CommunityView = ({ onNavigate, user }) => {
                       )}
 
                       {sError ? <div className="text-sm text-red-600 mt-2">{sError}</div> : null}
+                      {isResolved ? (
+                        <div className="text-sm text-gray-600 mt-2">Bài đăng đã đóng bình luận.</div>
+                      ) : null}
                     </div>
                   </div>
                 ) : null}

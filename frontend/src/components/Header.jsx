@@ -37,7 +37,7 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
             <button onClick={() => onNavigate('requestList')} className={`hover:text-yellow-400 ${currentView === 'requestList' ? 'text-yellow-400 font-semibold' : ''}`}>Theo dõi</button>
           )}
           <button onClick={() => onNavigate('community')} className={`hover:text-yellow-400 ${currentView === 'community' ? 'text-yellow-400 font-semibold' : ''}`}>Cộng đồng</button>
-          {user && (user.roles?.includes('ROLE_COMPANY') || user.roles?.includes('ROLE_ADMIN')) && (
+          {user && user.roles?.includes('ROLE_COMPANY') && (
             <>
               <button onClick={() => onNavigate('serviceManagement')} className={`hover:text-yellow-400 ${currentView === 'serviceManagement' ? 'text-yellow-400 font-semibold' : ''}`}>Quản lý dịch vụ</button>
               <button onClick={() => onNavigate('vehicleManagement')} className={`hover:text-yellow-400 ${currentView === 'vehicleManagement' ? 'text-yellow-400 font-semibold' : ''}`}>Quản lý phương tiện</button>
@@ -50,7 +50,8 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
             <>
               <button onClick={() => onNavigate('adminCompanyRegistrations')} className={`hover:text-yellow-400 ${currentView === 'adminCompanyRegistrations' ? 'text-yellow-400 font-semibold' : ''}`}>Duyệt công ty</button>
               <button onClick={() => onNavigate('adminWorkflows')} className={`hover:text-yellow-400 ${currentView === 'adminWorkflows' ? 'text-yellow-400 font-semibold' : ''}`}>Quy trình</button>
-              <button onClick={() => onNavigate('moderation')} className={`hover:text-yellow-400 ${currentView === 'moderation' ? 'text-yellow-400 font-semibold' : ''}`}>Kiểm duyệt</button>
+              <button onClick={() => onNavigate('adminPostManagement')} className={`hover:text-yellow-400 ${currentView === 'adminPostManagement' ? 'text-yellow-400 font-semibold' : ''}`}>Quản lý bài viết</button>
+              <button onClick={() => onNavigate('moderation')} className={`hover:text-yellow-400 ${currentView === 'moderation' ? 'text-yellow-400 font-semibold' : ''}`}>Kiểm duyệt tài khoản</button>
             </>
           )}
         </nav>
@@ -113,7 +114,7 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
             <button onClick={() => { onNavigate('requestList'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Theo dõi</button>
           )}
           <button onClick={() => { onNavigate('community'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Cộng đồng</button>
-          {user && (user.roles?.includes('ROLE_COMPANY') || user.roles?.includes('ROLE_ADMIN')) && (
+          {user && user.roles?.includes('ROLE_COMPANY') && (
             <>
               <button onClick={() => { onNavigate('serviceManagement'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Quản lý dịch vụ</button>
               <button onClick={() => { onNavigate('vehicleManagement'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Quản lý phương tiện</button>
@@ -126,7 +127,8 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
             <>
               <button onClick={() => { onNavigate('adminCompanyRegistrations'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Duyệt công ty</button>
               <button onClick={() => { onNavigate('adminWorkflows'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Quy trình</button>
-              <button onClick={() => { onNavigate('moderation'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Kiểm duyệt</button>
+              <button onClick={() => { onNavigate('adminPostManagement'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Quản lý bài viết</button>
+              <button onClick={() => { onNavigate('moderation'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Kiểm duyệt tài khoản</button>
             </>
           )}
           {user ? (

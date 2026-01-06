@@ -27,6 +27,12 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
         */
        Page<CommunityPost> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
+       Page<CommunityPost> findAllByIsDeletedFalseOrderByCreatedAtDesc(Pageable pageable);
+
+       List<CommunityPost> findByIsDeletedTrueOrderByDeletedAtDesc();
+
+       List<CommunityPost> findByIsResolvedTrueAndIsDeletedFalseOrderByCreatedAtDesc();
+
        /**
         * Find posts by author ID
         */
@@ -47,6 +53,8 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
         */
        List<CommunityPost> findByIsResolvedFalseOrderByCreatedAtDesc();
 
+       List<CommunityPost> findByIsResolvedFalseAndIsDeletedFalseOrderByCreatedAtDesc();
+
        /**
         * Find resolved posts
         */
@@ -56,8 +64,9 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
         * Search posts by title or content
         */
        @Query("SELECT p FROM CommunityPost p WHERE " +
+                     "p.isDeleted = false AND (" +
                      "LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-                     "LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+                     "LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%')) ) " +
                      "ORDER BY p.createdAt DESC")
        List<CommunityPost> searchByKeyword(@Param("keyword") String keyword);
 
@@ -65,8 +74,9 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
         * Search posts by title or content with pagination
         */
        @Query("SELECT p FROM CommunityPost p WHERE " +
+                     "p.isDeleted = false AND (" +
                      "LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-                     "LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+                     "LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%')) ) " +
                      "ORDER BY p.createdAt DESC")
        Page<CommunityPost> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 

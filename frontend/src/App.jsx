@@ -13,6 +13,7 @@ import RescueRequestCreateView from './views/RescueRequestCreateView.jsx';
 import RescueRequestListView from './views/RescueRequestListView.jsx';
 import RescueRequestTrackView from './views/RescueRequestTrackView.jsx';
 import UserProfileView from './views/UserProfileView.jsx';
+import UserProfileOverviewView from './views/UserProfileOverviewView.jsx';
 import ChatView from './views/ChatView.jsx';
 import CompanyProfileView from './views/CompanyProfileView.jsx';
 import CommunityView from './views/CommunityView.jsx';
@@ -22,7 +23,8 @@ import CompanyRegistrationCreateView from './views/CompanyRegistrationCreateView
 import CompanyRegistrationStatusView from './views/CompanyRegistrationStatusView.jsx';
 import AdminCompanyRegistrationsView from './views/AdminCompanyRegistrationsView.jsx';
 import AdminWorkflowView from './views/AdminWorkflowView.jsx';
-import ModerationView from './views/ModerationView.jsx';
+import AccountModerationView from './views/AccountModerationView.jsx';
+import AdminPostManagementView from './views/AdminPostManagementView.jsx';
 
 import { clearAuth, loadAuth, saveAuth } from './utils/authStorage.js';
 
@@ -91,9 +93,10 @@ function App() {
         {currentView === 'createRequest' && <RescueRequestCreateView onNavigate={handleNavigate} />}
         {currentView === 'requestList' && <RescueRequestListView onNavigate={handleNavigate} />}
         {currentView === 'requestDetail' && <RescueRequestTrackView onNavigate={handleNavigate} />}
-        {currentView === 'profile' && <UserProfileView user={user} onUpdate={handleProfileUpdate} />}
+        {currentView === 'profile' && <UserProfileOverviewView user={user} onNavigate={handleNavigate} />}
+        {currentView === 'profileEdit' && <UserProfileView user={user} onUpdate={handleProfileUpdate} onNavigate={handleNavigate} />}
         {currentView === 'chat' && <ChatView onNavigate={handleNavigate} />}
-        {currentView === 'companyProfile' && <CompanyProfileView onNavigate={handleNavigate} />}
+        {currentView === 'companyProfile' && <CompanyProfileView onNavigate={handleNavigate} user={user} />}
         {currentView === 'community' && <CommunityView onNavigate={handleNavigate} user={user} />}
         {currentView === 'serviceManagement' && <ServiceManagementView companyId={user?.companyId} isAdmin={user?.roles?.includes('ROLE_COMPANY') || user?.roles?.includes('ROLE_ADMIN')} />}
         {currentView === 'vehicleManagement' && <VehicleManagementView onNavigate={handleNavigate} />}
@@ -101,7 +104,8 @@ function App() {
         {currentView === 'companyRegistrationStatus' && <CompanyRegistrationStatusView onNavigate={handleNavigate} />}
         {currentView === 'adminCompanyRegistrations' && <AdminCompanyRegistrationsView onNavigate={handleNavigate} />}
         {currentView === 'adminWorkflows' && <AdminWorkflowView onNavigate={handleNavigate} />}
-        {currentView === 'moderation' && <ModerationView onNavigate={handleNavigate} />}
+        {currentView === 'moderation' && <AccountModerationView onNavigate={handleNavigate} />}
+        {currentView === 'adminPostManagement' && <AdminPostManagementView onNavigate={handleNavigate} />}
       </div>
 
       {/* 3. Footer luôn hiển thị */}

@@ -35,3 +35,91 @@ export async function toggleUserLock(userId, isLocked) {
   // Expected response format: { data: { id, username, status, message } }
   return res.data;
 }
+
+/**
+ * Admin stats (users/posts/comments/locked)
+ * GET /api/admin/stats
+ */
+export async function getAdminStats() {
+  const auth = loadAuth();
+  const token = auth?.token;
+
+  const res = await apiRequest('/api/admin/stats', {
+    method: 'GET',
+    token,
+  });
+
+  return res.data;
+}
+
+/**
+ * Admin post management (community posts)
+ */
+
+export async function adminListDeletedCommunityPosts() {
+  const auth = loadAuth();
+  const token = auth?.token;
+
+  const res = await apiRequest('/api/admin/community-posts/deleted', {
+    method: 'GET',
+    token,
+  });
+
+  return res.data || [];
+}
+
+export async function adminListClosedCommunityPosts() {
+  const auth = loadAuth();
+  const token = auth?.token;
+
+  const res = await apiRequest('/api/admin/community-posts/closed', {
+    method: 'GET',
+    token,
+  });
+
+  return res.data || [];
+}
+
+export async function adminGetCommunityPostDetail(postId) {
+  const auth = loadAuth();
+  const token = auth?.token;
+
+  const res = await apiRequest(`/api/admin/community-posts/${encodeURIComponent(String(postId))}`,
+    {
+      method: 'GET',
+      token,
+    },
+  );
+
+  return res.data;
+}
+
+export async function adminRestoreCommunityPost(postId) {
+  const auth = loadAuth();
+  const token = auth?.token;
+
+  const res = await apiRequest(
+    `/api/admin/community-posts/${encodeURIComponent(String(postId))}/restore`,
+    {
+      method: 'PATCH',
+      token,
+    },
+  );
+
+  return res.data;
+}
+
+export async function adminOpenCommunityPostComments(postId) {
+  const auth = loadAuth();
+  const token = auth?.token;
+
+  const res = await apiRequest(
+    `/api/admin/community-posts/${encodeURIComponent(String(postId))}/comments/open`,
+    {
+      method: 'PATCH',
+      token,
+    },
+  );
+
+  return res.data;
+}

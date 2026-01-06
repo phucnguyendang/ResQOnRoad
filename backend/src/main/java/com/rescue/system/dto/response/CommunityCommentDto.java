@@ -15,6 +15,7 @@ public class CommunityCommentDto {
     private Long parentCommentId;
     private Boolean isHelpful;
     private Integer helpfulCount;
+    private Boolean isClosed;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -77,6 +78,14 @@ public class CommunityCommentDto {
 
     public void setHelpfulCount(Integer helpfulCount) {
         this.helpfulCount = helpfulCount;
+    }
+
+    public Boolean getIsClosed() {
+        return isClosed;
+    }
+
+    public void setIsClosed(Boolean isClosed) {
+        this.isClosed = isClosed;
     }
 
     public Instant getCreatedAt() {

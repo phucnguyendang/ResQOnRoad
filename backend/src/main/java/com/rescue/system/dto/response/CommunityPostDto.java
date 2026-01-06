@@ -20,6 +20,8 @@ public class CommunityPostDto {
     private String imageBase64;
     private Integer viewCount;
     private Boolean isResolved;
+    private Boolean isDeleted;
+    private Instant deletedAt;
     private Integer commentCount;
     private Instant createdAt;
     private Instant updatedAt;
@@ -116,6 +118,22 @@ public class CommunityPostDto {
 
     public void setIsResolved(Boolean isResolved) {
         this.isResolved = isResolved;
+    }
+
+    public Boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(Boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(Instant deletedAt) {
+        this.deletedAt = deletedAt;
     }
 
     public Integer getCommentCount() {

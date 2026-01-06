@@ -3,7 +3,7 @@ import { User, Phone, Upload, Save, X } from 'lucide-react';
 import { getUserProfile, updateUserProfile } from '../service/userProfileService';
 import { getMyCompanyProfile, updateMyCompanyProfile } from '../service/companyProfileService';
 
-const UserProfileView = ({ user, onUpdate }) => {
+const UserProfileView = ({ user, onUpdate, onNavigate }) => {
   const [profile, setProfile] = useState(null);
   const [companyProfile, setCompanyProfile] = useState(null);
   const [companyLoading, setCompanyLoading] = useState(false);
@@ -13,7 +13,7 @@ const UserProfileView = ({ user, onUpdate }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(true);
 
   const role = user?.role;
   const canGetLocation = useMemo(() => typeof navigator !== 'undefined' && !!navigator.geolocation, []);
@@ -324,7 +324,7 @@ const UserProfileView = ({ user, onUpdate }) => {
       });
 
       setSuccess('Cập nhật hồ sơ thành công');
-      setIsEditing(false);
+      onNavigate?.('profile');
 
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
@@ -363,7 +363,7 @@ const UserProfileView = ({ user, onUpdate }) => {
     }
     setError(null);
     setSuccess(null);
-    setIsEditing(false);
+    onNavigate?.('profile');
   };
 
   if (loading) {
@@ -393,14 +393,6 @@ const UserProfileView = ({ user, onUpdate }) => {
                   <p className="text-blue-100 mt-1">Quản lý thông tin cá nhân của bạn</p>
                 </div>
               </div>
-              {!isEditing && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition"
-                >
-                  Chỉnh sửa
-                </button>
-              )}
             </div>
           </div>
 

@@ -6,9 +6,12 @@ import com.rescue.system.dto.request.UpdateCommunityPostRequest;
 import com.rescue.system.dto.response.ApiResponse;
 import com.rescue.system.dto.response.CommunityCommentDto;
 import com.rescue.system.dto.response.CommunityPostDto;
+import com.rescue.system.entity.Account;
+import com.rescue.system.entity.Role;
 import com.rescue.system.exception.ApiException;
 import com.rescue.system.security.JwtTokenProvider;
 import com.rescue.system.service.CommunityService;
+import com.rescue.system.repository.AccountRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -54,6 +57,9 @@ public class CommunityController {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private AccountRepository accountRepository;
 
     // ==================== POST ENDPOINTS ====================
 
@@ -156,7 +162,7 @@ public class CommunityController {
      * DELETE /api/community/posts/{id}
      */
     @DeleteMapping("/posts/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'COMPANY')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deletePost(
             @PathVariable Long id,
             @RequestHeader("Authorization") String token) {
@@ -180,13 +186,13 @@ public class CommunityController {
      * PATCH /api/community/posts/{id}/resolve
      */
     @PatchMapping("/posts/{id}/resolve")
-    @PreAuthorize("hasAnyRole('USER', 'COMPANY')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
     public ResponseEntity<ApiResponse<CommunityPostDto>> markPostAsResolved(
             @PathVariable Long id,
             @RequestHeader("Authorization") String token) {
         try {
             Long userId = getUserIdFromToken(token);
-            CommunityPostDto result = communityService.markPostAsResolved(id, userId);
+            CommunityPostDto result = communityService.setPostResolved(id, userId, true);
 
             ApiResponse<CommunityPostDto> response = new ApiResponse<>(
                     "Đã đánh dấu bài đăng là đã giải quyết",
@@ -196,6 +202,54 @@ public class CommunityController {
             throw e;
         } catch (Exception e) {
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Không thể đánh dấu bài đăng: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Close comments for a post
+     * PATCH /api/community/posts/{id}/comments/close
+     */
+    @PatchMapping("/posts/{id}/comments/close")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
+    public ResponseEntity<ApiResponse<CommunityPostDto>> closePostComments(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String token) {
+        try {
+            Long userId = getUserIdFromToken(token);
+            CommunityPostDto result = communityService.setPostResolved(id, userId, true);
+
+            ApiResponse<CommunityPostDto> response = new ApiResponse<>(
+                    "Đã đóng bình luận",
+                    result);
+            return ResponseEntity.ok(response);
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Không thể đóng bình luận: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Open comments for a post
+     * PATCH /api/community/posts/{id}/comments/open
+     */
+    @PatchMapping("/posts/{id}/comments/open")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
+    public ResponseEntity<ApiResponse<CommunityPostDto>> openPostComments(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String token) {
+        try {
+            Long userId = getUserIdFromToken(token);
+            CommunityPostDto result = communityService.setPostResolved(id, userId, false);
+
+            ApiResponse<CommunityPostDto> response = new ApiResponse<>(
+                    "Đã mở bình luận",
+                    result);
+            return ResponseEntity.ok(response);
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Không thể mở bình luận: " + e.getMessage());
         }
     }
 
@@ -313,6 +367,33 @@ public class CommunityController {
         }
     }
 
+    /**
+     * Get posts of a company by companyId (public)
+     * GET /api/community/posts/by-company/{companyId}
+     */
+    @GetMapping("/posts/by-company/{companyId}")
+    public ResponseEntity<ApiResponse<Page<CommunityPostDto>>> getPostsByCompany(
+            @PathVariable Long companyId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Account companyAccount = accountRepository.findFirstByCompanyIdAndRole(companyId, Role.COMPANY)
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản công ty"));
+
+            Pageable pageable = PageRequest.of(page, size);
+            Page<CommunityPostDto> result = communityService.getPostsByAuthor(companyAccount.getId(), pageable);
+
+            ApiResponse<Page<CommunityPostDto>> response = new ApiResponse<>(
+                    "Lấy danh sách bài đăng của công ty thành công",
+                    result);
+            return ResponseEntity.ok(response);
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Không thể lấy danh sách: " + e.getMessage());
+        }
+    }
+
     // ==================== COMMENT ENDPOINTS ====================
 
     /**
@@ -411,7 +492,7 @@ public class CommunityController {
      * DELETE /api/community/comments/{commentId}
      */
     @DeleteMapping("/comments/{commentId}")
-    @PreAuthorize("hasAnyRole('USER', 'COMPANY')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteComment(
             @PathVariable Long commentId,
             @RequestHeader("Authorization") String token) {
@@ -472,6 +553,30 @@ public class CommunityController {
             throw e;
         } catch (Exception e) {
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Không thể vote bình luận: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Close a comment
+     * PATCH /api/community/comments/{commentId}/close
+     */
+    @PatchMapping("/comments/{commentId}/close")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
+    public ResponseEntity<ApiResponse<CommunityCommentDto>> closeComment(
+            @PathVariable Long commentId,
+            @RequestHeader("Authorization") String token) {
+        try {
+            Long userId = getUserIdFromToken(token);
+            CommunityCommentDto result = communityService.closeComment(commentId, userId);
+
+            ApiResponse<CommunityCommentDto> response = new ApiResponse<>(
+                    "Đã đóng bình luận",
+                    result);
+            return ResponseEntity.ok(response);
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Không thể đóng bình luận: " + e.getMessage());
         }
     }
 

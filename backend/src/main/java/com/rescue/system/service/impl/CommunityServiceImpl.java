@@ -11,6 +11,7 @@ import com.rescue.system.entity.CommunityPost;
 import com.rescue.system.entity.ContentStatus;
 import com.rescue.system.entity.ContentType;
 import com.rescue.system.entity.ModeratableContent;
+import com.rescue.system.entity.Role;
 import com.rescue.system.exception.ApiException;
 import com.rescue.system.repository.AccountRepository;
 import com.rescue.system.repository.CommunityCommentRepository;
@@ -50,6 +51,15 @@ public class CommunityServiceImpl implements CommunityService {
 
     // ==================== POST OPERATIONS ====================
 
+    private Account requireAccount(Long accountId) {
+        return accountRepository.findById(accountId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
+    }
+
+    private boolean isAdmin(Account account) {
+        return account != null && account.getRole() == Role.ADMIN;
+    }
+
     @Override
     public CommunityPostDto createPost(Long authorId, CreateCommunityPostRequest request) {
         Account author = accountRepository.findById(authorId)
@@ -87,6 +97,9 @@ public class CommunityServiceImpl implements CommunityService {
     public CommunityPostDto getPostById(Long postId) {
         CommunityPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng"));
+        if (Boolean.TRUE.equals(post.getIsDeleted())) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng");
+        }
         return mapToPostDto(post, true);
     }
 
@@ -94,6 +107,9 @@ public class CommunityServiceImpl implements CommunityService {
     public CommunityPostDto getPostByIdAndIncrementView(Long postId) {
         CommunityPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng"));
+        if (Boolean.TRUE.equals(post.getIsDeleted())) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng");
+        }
         post.incrementViewCount();
         postRepository.save(post);
         return mapToPostDto(post, true);
@@ -102,7 +118,7 @@ public class CommunityServiceImpl implements CommunityService {
     @Override
     @Transactional(readOnly = true)
     public Page<CommunityPostDto> getAllPosts(Pageable pageable) {
-        return postRepository.findAllByOrderByCreatedAtDesc(pageable)
+        return postRepository.findAllByIsDeletedFalseOrderByCreatedAtDesc(pageable)
                 .map(post -> mapToPostDto(post, false));
     }
 
@@ -132,7 +148,7 @@ public class CommunityServiceImpl implements CommunityService {
     @Override
     @Transactional(readOnly = true)
     public List<CommunityPostDto> getUnresolvedPosts() {
-        return postRepository.findByIsResolvedFalseOrderByCreatedAtDesc()
+        return postRepository.findByIsResolvedFalseAndIsDeletedFalseOrderByCreatedAtDesc()
                 .stream()
                 .map(post -> mapToPostDto(post, false))
                 .collect(Collectors.toList());
@@ -208,7 +224,13 @@ public class CommunityServiceImpl implements CommunityService {
         CommunityPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng"));
 
-        if (!post.getAuthor().getId().equals(authorId)) {
+        if (Boolean.TRUE.equals(post.getIsDeleted())) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng");
+        }
+
+        Account actor = requireAccount(authorId);
+
+        if (!isAdmin(actor) && !post.getAuthor().getId().equals(authorId)) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Chỉ tác giả mới có thể đánh dấu bài đăng đã giải quyết");
         }
 
@@ -220,15 +242,44 @@ public class CommunityServiceImpl implements CommunityService {
     }
 
     @Override
+    public CommunityPostDto setPostResolved(Long postId, Long actorId, boolean resolved) {
+        CommunityPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng"));
+
+        if (Boolean.TRUE.equals(post.getIsDeleted())) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng");
+        }
+
+        Account actor = requireAccount(actorId);
+        if (!isAdmin(actor) && !post.getAuthor().getId().equals(actorId)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Bạn không có quyền thay đổi trạng thái bình luận của bài đăng này");
+        }
+
+        post.setIsResolved(resolved);
+        post.setUpdatedAt(Instant.now());
+        CommunityPost updated = postRepository.save(post);
+        return mapToPostDto(updated, true);
+    }
+
+    @Override
     public void deletePost(Long postId, Long authorId) {
         CommunityPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng"));
 
-        if (!post.getAuthor().getId().equals(authorId)) {
+        if (Boolean.TRUE.equals(post.getIsDeleted())) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng");
+        }
+
+        Account actor = requireAccount(authorId);
+
+        if (!isAdmin(actor) && !post.getAuthor().getId().equals(authorId)) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Bạn không có quyền xóa bài đăng này");
         }
 
-        postRepository.delete(post);
+        post.setIsDeleted(true);
+        post.setDeletedAt(Instant.now());
+        post.setUpdatedAt(Instant.now());
+        postRepository.save(post);
     }
 
     // ==================== COMMENT OPERATIONS ====================
@@ -238,8 +289,15 @@ public class CommunityServiceImpl implements CommunityService {
         CommunityPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng"));
 
-        Account author = accountRepository.findById(authorId)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
+        if (Boolean.TRUE.equals(post.getIsDeleted())) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng");
+        }
+
+        if (Boolean.TRUE.equals(post.getIsResolved())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Bài đăng đã đóng bình luận");
+        }
+
+        Account author = requireAccount(authorId);
 
         CommunityComment comment = new CommunityComment();
         comment.setContent(request.getContent());
@@ -274,8 +332,9 @@ public class CommunityServiceImpl implements CommunityService {
     @Override
     @Transactional(readOnly = true)
     public List<CommunityCommentDto> getCommentsByPostId(Long postId) {
-        // Verify post exists
-        if (!postRepository.existsById(postId)) {
+        CommunityPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng"));
+        if (Boolean.TRUE.equals(post.getIsDeleted())) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng");
         }
 
@@ -288,8 +347,9 @@ public class CommunityServiceImpl implements CommunityService {
     @Override
     @Transactional(readOnly = true)
     public Page<CommunityCommentDto> getCommentsByPostId(Long postId, Pageable pageable) {
-        // Verify post exists
-        if (!postRepository.existsById(postId)) {
+        CommunityPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng"));
+        if (Boolean.TRUE.equals(post.getIsDeleted())) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng");
         }
 
@@ -346,13 +406,32 @@ public class CommunityServiceImpl implements CommunityService {
         CommunityComment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bình luận"));
 
-        // Allow deletion by comment author or post author
-        if (!comment.getAuthor().getId().equals(authorId) &&
-                !comment.getPost().getAuthor().getId().equals(authorId)) {
+        Account actor = requireAccount(authorId);
+
+        // USER/COMPANY: only own comment. ADMIN: any comment.
+        if (!isAdmin(actor) && !comment.getAuthor().getId().equals(authorId)) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Bạn không có quyền xóa bình luận này");
         }
 
         commentRepository.delete(comment);
+    }
+
+    @Override
+    public CommunityCommentDto closeComment(Long commentId, Long actorId) {
+        CommunityComment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Không tìm thấy bình luận"));
+
+        Account actor = requireAccount(actorId);
+
+        // USER/COMPANY: only own comment. ADMIN: any comment.
+        if (!isAdmin(actor) && !comment.getAuthor().getId().equals(actorId)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Bạn không có quyền đóng bình luận này");
+        }
+
+        comment.setIsClosed(true);
+        comment.setUpdatedAt(Instant.now());
+        CommunityComment updated = commentRepository.save(comment);
+        return mapToCommentDto(updated);
     }
 
     @Override
@@ -393,6 +472,8 @@ public class CommunityServiceImpl implements CommunityService {
         dto.setImageBase64(post.getImageBase64());
         dto.setViewCount(post.getViewCount());
         dto.setIsResolved(post.getIsResolved());
+        dto.setIsDeleted(post.getIsDeleted());
+        dto.setDeletedAt(post.getDeletedAt());
         dto.setCommentCount((int) commentRepository.countByPostId(post.getId()));
         dto.setCreatedAt(post.getCreatedAt());
         dto.setUpdatedAt(post.getUpdatedAt());
@@ -417,6 +498,7 @@ public class CommunityServiceImpl implements CommunityService {
         dto.setParentCommentId(comment.getParentComment() != null ? comment.getParentComment().getId() : null);
         dto.setIsHelpful(comment.getIsHelpful());
         dto.setHelpfulCount(comment.getHelpfulCount());
+        dto.setIsClosed(comment.getIsClosed());
         dto.setCreatedAt(comment.getCreatedAt());
         dto.setUpdatedAt(comment.getUpdatedAt());
         return dto;

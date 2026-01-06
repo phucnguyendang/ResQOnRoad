@@ -36,6 +36,9 @@ public class CommunityComment {
     @Column(name = "helpful_count", nullable = false)
     private Integer helpfulCount = 0;
 
+    @Column(name = "is_closed")
+    private Boolean isClosed = false;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
@@ -108,6 +111,14 @@ public class CommunityComment {
 
     public void setHelpfulCount(Integer helpfulCount) {
         this.helpfulCount = helpfulCount;
+    }
+
+    public Boolean getIsClosed() {
+        return isClosed;
+    }
+
+    public void setIsClosed(Boolean isClosed) {
+        this.isClosed = isClosed;
     }
 
     public Instant getCreatedAt() {

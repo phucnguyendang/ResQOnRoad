@@ -3,6 +3,7 @@ import { Star } from 'lucide-react';
 import { getCompanyDetail } from '../service/companyService';
 import { getCachedReviewsByCompanyId } from '../service/reviewService';
 import { getLastCompanyId } from '../utils/companyStorage';
+import { getCompanyCommunityPosts } from '../service/communityService';
 
 function formatDateTime(value) {
   if (!value) return '';
@@ -30,12 +31,39 @@ function StarRow({ value = 0 }) {
   );
 }
 
-export default function CompanyProfileView({ onNavigate }) {
+export default function CompanyProfileView({ onNavigate, user }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [company, setCompany] = useState(null);
 
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [postsError, setPostsError] = useState('');
+  const [postsPage, setPostsPage] = useState(null);
+  const [pageIndex, setPageIndex] = useState(0);
+
   const companyId = useMemo(() => getLastCompanyId(), []);
+
+  const canEdit = useMemo(() => {
+    if (!user || !companyId) return false;
+    const isCompany = user.roles?.includes('ROLE_COMPANY') || String(user.role || '').toUpperCase() === 'COMPANY';
+    if (!isCompany) return false;
+    const myCompanyId = user.companyId ?? user.company_id;
+    return myCompanyId != null && String(myCompanyId) === String(companyId);
+  }, [user, companyId]);
+
+  const posts = useMemo(() => {
+    const content = postsPage?.content;
+    return Array.isArray(content) ? content : [];
+  }, [postsPage]);
+
+  const hasNextPage = useMemo(() => {
+    if (!postsPage) return false;
+    if (typeof postsPage.last === 'boolean') return !postsPage.last;
+    if (typeof postsPage.totalPages === 'number' && typeof postsPage.number === 'number') {
+      return postsPage.number + 1 < postsPage.totalPages;
+    }
+    return false;
+  }, [postsPage]);
 
   const localReviews = useMemo(() => {
     if (!companyId) return [];
@@ -81,6 +109,31 @@ export default function CompanyProfileView({ onNavigate }) {
     };
   }, [companyId]);
 
+  async function loadCompanyPosts({ page = 0, append = false } = {}) {
+    if (!companyId) return;
+    setPostsError('');
+    setPostsLoading(true);
+    try {
+      const data = await getCompanyCommunityPosts(companyId, { page, size: 10 });
+      setPostsPage((prev) => {
+        if (!append) return data;
+        const prevContent = Array.isArray(prev?.content) ? prev.content : [];
+        const nextContent = Array.isArray(data?.content) ? data.content : [];
+        return { ...data, content: [...prevContent, ...nextContent] };
+      });
+      setPageIndex(page);
+    } catch (e) {
+      setPostsError(e?.message || 'Không thể tải bài đăng của công ty.');
+    } finally {
+      setPostsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadCompanyPosts({ page: 0, append: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyId]);
+
   const serverReviews = Array.isArray(company?.reviews) ? company.reviews : [];
   const combinedReviews = useMemo(() => {
     const combined = [...serverReviews];
@@ -121,13 +174,24 @@ export default function CompanyProfileView({ onNavigate }) {
               <h1 className="text-2xl font-extrabold text-gray-900">Hồ sơ công ty cứu hộ</h1>
               <p className="text-sm text-gray-600 mt-1">Thông tin công ty + rating + danh sách đánh giá.</p>
             </div>
-            <button
-              type="button"
-              onClick={() => onNavigate('requestDetail')}
-              className="bg-blue-900 text-white font-bold px-4 py-2 rounded hover:bg-blue-800"
-            >
-              Quay lại
-            </button>
+            <div className="flex items-center gap-2">
+              {canEdit ? (
+                <button
+                  type="button"
+                  onClick={() => onNavigate?.('profileEdit')}
+                  className="bg-yellow-500 text-blue-900 font-bold px-4 py-2 rounded hover:bg-yellow-400"
+                >
+                  Chỉnh sửa
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => onNavigate('requestDetail')}
+                className="bg-blue-900 text-white font-bold px-4 py-2 rounded hover:bg-blue-800"
+              >
+                Quay lại
+              </button>
+            </div>
           </div>
 
           {loading && <div className="mt-6 text-sm text-gray-700">Đang tải hồ sơ...</div>}
@@ -160,6 +224,79 @@ export default function CompanyProfileView({ onNavigate }) {
                     </div>
                     <div className="text-xs text-gray-500 mt-1">{combinedStats.total} đánh giá</div>
                   </div>
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div>
+                    <div className="font-bold text-gray-900">Bài đăng</div>
+                    <div className="text-sm text-gray-600">Các bài đăng của công ty trong Cộng đồng.</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => loadCompanyPosts({ page: 0, append: false })}
+                    className="text-sm bg-blue-900 text-white px-3 py-2 rounded hover:bg-blue-800"
+                    disabled={postsLoading}
+                  >
+                    Làm mới
+                  </button>
+                </div>
+
+                {postsError ? (
+                  <div className="mt-3 text-sm text-red-600">{postsError}</div>
+                ) : null}
+
+                {postsLoading && !postsPage ? (
+                  <div className="mt-3 text-sm text-gray-700">Đang tải bài đăng...</div>
+                ) : null}
+
+                <div className="mt-4 space-y-3">
+                  {posts.map((post) => (
+                    <article key={post?.id} className="bg-gray-50 border border-gray-200 rounded-md p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="font-semibold text-gray-900">{post?.title}</div>
+                          <div className="text-xs text-gray-500 mt-1">{formatDateTime(post?.createdAt)}</div>
+                        </div>
+                        {post?.isResolved ? (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Đã đóng</span>
+                        ) : (
+                          <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Đang mở</span>
+                        )}
+                      </div>
+
+                      {post?.content ? (
+                        <div className="mt-2 text-sm text-gray-800 whitespace-pre-wrap">{post.content}</div>
+                      ) : null}
+
+                      {post?.imageBase64 ? (
+                        <img src={post.imageBase64} alt="post" className="w-full rounded border mt-3" />
+                      ) : null}
+
+                      <div className="mt-2 text-xs text-gray-600">
+                        {typeof post?.commentCount === 'number' ? post.commentCount : 0} bình luận
+                        {typeof post?.viewCount === 'number' ? ` · ${post.viewCount} lượt xem` : ''}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+
+                {!postsLoading && posts.length === 0 ? (
+                  <div className="mt-3 text-sm text-gray-700">Chưa có bài đăng nào.</div>
+                ) : null}
+
+                <div className="mt-4 flex justify-center">
+                  {posts.length > 0 && hasNextPage ? (
+                    <button
+                      type="button"
+                      onClick={() => loadCompanyPosts({ page: pageIndex + 1, append: true })}
+                      className="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800 disabled:opacity-60"
+                      disabled={postsLoading}
+                    >
+                      {postsLoading ? 'Đang tải...' : 'Tải thêm'}
+                    </button>
+                  ) : null}
                 </div>
               </div>
 
