@@ -234,9 +234,13 @@ public class AdminModerationController {
     }
 
     /**
-     * DELETE /api/admin/posts/{id}
-     * Delete content permanently (as specified in the API requirements)
-     * (Xóa bài viết/đánh giá vi phạm)
+     * DELETE /api/admin/moderation/posts/{id}
+     * Delete content permanently (alternative endpoint within moderation module)
+     * (Xóa bài viết/đánh giá vi phạm - endpoint phụ)
+     * 
+     * Note: The primary endpoint as per API specification is DELETE
+     * /api/admin/posts/{id}
+     * which is handled by AdminPostsController
      * 
      * @param id          the content ID
      * @param userDetails authenticated admin details
