@@ -99,6 +99,21 @@ export async function getMyRescueRequests() {
 }
 
 /**
+ * List requests assigned to current company (backend).
+ * GET /api/rescue-requests/company/assigned
+ */
+export async function getCompanyAssignedRescueRequests() {
+  const token = requireToken();
+
+  const res = await apiRequest('/api/rescue-requests/company/assigned', {
+    method: 'GET',
+    token,
+  });
+
+  return res.data;
+}
+
+/**
  * UC203 - Cancel rescue request
  * POST /api/rescue-requests/{id}/cancel
  */

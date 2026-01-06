@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { getMyRescueRequests, setLastRescueRequestId, cancelRescueRequest } from '../service/rescueRequestService';
+import { getCompanyAssignedRescueRequests, getMyRescueRequests, setLastRescueRequestId, cancelRescueRequest } from '../service/rescueRequestService';
+import { loadAuth } from '../utils/authStorage';
 
 function formatDateTime(value) {
   if (!value) return '';
@@ -29,12 +30,26 @@ const RescueRequestListView = ({ onNavigate }) => {
   const [cancellingId, setCancellingId] = useState(null);
   const [cancelConfirmId, setCancelConfirmId] = useState(null);
 
+  const auth = loadAuth();
+  const role = auth?.user?.role;
+  const canCreate = role === 'USER';
+  const canCancel = role === 'USER';
+  const canViewList = role === 'USER' || role === 'COMPANY';
+
   useEffect(() => {
     const fetchList = async () => {
       setLoading(true);
       setError(null);
       try {
-        const list = await getMyRescueRequests();
+        if (!canViewList) {
+          setActiveList([]);
+          setError('Tài khoản hiện tại không có danh sách theo dõi yêu cầu cứu hộ.');
+          return;
+        }
+
+        const list = role === 'COMPANY'
+          ? await getCompanyAssignedRescueRequests()
+          : await getMyRescueRequests();
 
         const normalized = Array.isArray(list) ? list : [];
         const incomplete = normalized.filter((r) => !TERMINAL_STATUSES.has(String(r.status || '').toUpperCase()));
@@ -55,7 +70,7 @@ const RescueRequestListView = ({ onNavigate }) => {
     };
 
     fetchList();
-  }, []);
+  }, [canViewList, role]);
 
   const handleSelect = (id) => {
     setLastRescueRequestId(id);
@@ -64,11 +79,13 @@ const RescueRequestListView = ({ onNavigate }) => {
 
   const handleCancelClick = (e, id) => {
     e.stopPropagation();
+    if (!canCancel) return;
     setCancelConfirmId(id);
   };
 
   const handleConfirmCancel = async () => {
     if (!cancelConfirmId) return;
+    if (!canCancel) return;
     
     setCancellingId(cancelConfirmId);
     setError(null);
@@ -99,7 +116,9 @@ const RescueRequestListView = ({ onNavigate }) => {
         <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-6">
           <h1 className="text-2xl font-extrabold text-gray-900">Danh sách yêu cầu cứu hộ</h1>
           <p className="text-sm text-gray-600 mt-1">
-            Đang lấy dữ liệu từ backend (GET /api/rescue-requests/user/my-requests).
+            {role === 'COMPANY'
+              ? 'Đang lấy dữ liệu từ backend (GET /api/rescue-requests/company/assigned).'
+              : 'Đang lấy dữ liệu từ backend (GET /api/rescue-requests/user/my-requests).'}
           </p>
 
           <div className="mt-4">
@@ -135,7 +154,7 @@ const RescueRequestListView = ({ onNavigate }) => {
                           {time && <div className="text-xs text-gray-400 mt-1">{formatDateTime(time)}</div>}
                         </div>
                         <div className="flex items-center gap-2">
-                          {!TERMINAL_STATUSES.has(status) && (
+                          {canCancel && !TERMINAL_STATUSES.has(status) && (
                             <button
                               onClick={(e) => handleCancelClick(e, r.id)}
                               disabled={cancellingId === r.id}
@@ -155,12 +174,14 @@ const RescueRequestListView = ({ onNavigate }) => {
           </div>
 
           <div className="mt-4 flex gap-3">
-            <button
-              onClick={() => onNavigate('createRequest')}
-              className="bg-yellow-500 text-blue-900 font-extrabold px-4 py-2 rounded hover:bg-yellow-400"
-            >
-              Tạo yêu cầu mới
-            </button>
+            {canCreate && (
+              <button
+                onClick={() => onNavigate('createRequest')}
+                className="bg-yellow-500 text-blue-900 font-extrabold px-4 py-2 rounded hover:bg-yellow-400"
+              >
+                Tạo yêu cầu mới
+              </button>
+            )}
             <button
               onClick={() => onNavigate('home')}
               className="bg-gray-200 text-gray-900 font-bold px-4 py-2 rounded hover:bg-gray-300"
@@ -170,7 +191,7 @@ const RescueRequestListView = ({ onNavigate }) => {
           </div>
 
           {/* Cancel Confirmation Modal */}
-          {cancelConfirmId && (
+          {canCancel && cancelConfirmId && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm">
                 <h2 className="text-lg font-bold text-gray-900">Xác nhận hủy yêu cầu?</h2>
