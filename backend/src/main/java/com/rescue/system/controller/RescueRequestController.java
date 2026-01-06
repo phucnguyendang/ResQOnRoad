@@ -4,6 +4,7 @@ import com.rescue.system.dto.request.CreateRescueRequestDto;
 import com.rescue.system.dto.request.RejectRescueRequestDto;
 import com.rescue.system.dto.request.UpdateRescueStatusDto;
 import com.rescue.system.dto.response.ApiResponse;
+import com.rescue.system.dto.response.RescueRequestDetailDto;
 import com.rescue.system.dto.response.RescueRequestDto;
 import com.rescue.system.entity.RescueStatus;
 import com.rescue.system.exception.ApiException;
@@ -61,10 +62,10 @@ public class RescueRequestController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
-    public ResponseEntity<ApiResponse<RescueRequestDto>> getRescueRequest(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<RescueRequestDetailDto>> getRescueRequest(@PathVariable Long id) {
         try {
-            RescueRequestDto result = rescueRequestService.getRescueRequestById(id);
-            ApiResponse<RescueRequestDto> response = new ApiResponse<>(
+            RescueRequestDetailDto result = rescueRequestService.getRescueRequestDetailById(id);
+            ApiResponse<RescueRequestDetailDto> response = new ApiResponse<>(
                     "Lấy chi tiết yêu cầu cứu hộ thành công",
                     result
             );
@@ -181,16 +182,16 @@ public class RescueRequestController {
      */
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('COMPANY')")
-    public ResponseEntity<ApiResponse<RescueRequestDto>> updateRescueRequestStatus(
+    public ResponseEntity<ApiResponse<Object>> updateRescueRequestStatus(
             @PathVariable Long id,
             @Valid @RequestBody UpdateRescueStatusDto statusDto,
             @RequestHeader("Authorization") String token) {
         try {
             Long companyId = getUserIdFromToken(token);
-            RescueRequestDto result = rescueRequestService.updateRescueRequestStatus(id, companyId, statusDto);
+            Object result = rescueRequestService.updateRescueRequestStatusWithHistory(id, companyId, statusDto);
             
-            ApiResponse<RescueRequestDto> response = new ApiResponse<>(
-                    "Trạng thái yêu cầu cứu hộ đã được cập nhật thành công",
+            ApiResponse<Object> response = new ApiResponse<>(
+                    "Cập nhật trạng thái yêu cầu cứu hộ đã được cập nhật thành công",
                     result
             );
             return ResponseEntity.ok(response);

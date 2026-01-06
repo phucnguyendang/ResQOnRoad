@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { createRescueRequestMock } from '../service/rescueRequestService';
+import { createRescueRequest } from '../service/rescueRequestService';
 import { searchNearbyCompanies } from '../service/companyService';
 
 function readFileAsDataUrl(file) {
@@ -46,13 +46,19 @@ const RescueRequestCreateView = ({ onNavigate }) => {
     setCreated(null);
 
     if (!canGetLocation) {
-      setError('Trình duyệt không hỗ trợ lấy vị trí (Geolocation).');
+      setError('Trình duyệt không hỗ trợ lấy vị trí (Geolocation). Vui lòng nhập tọa độ thủ công.');
       return;
     }
 
     setLocating(true);
+    const timeoutId = setTimeout(() => {
+      setLocating(false);
+      setError('Hết thời gian chờ GPS (30s). Vui lòng kiểm tra: 1) Bật GPS/định vị, 2) Cấp quyền truy cập vị trí cho website, 3) Kết nối mạng ổn định.');
+    }, 30000);
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        clearTimeout(timeoutId);
         setLatitude(String(pos.coords.latitude));
         setLongitude(String(pos.coords.longitude));
         setSelectedCompany(null);
@@ -60,19 +66,28 @@ const RescueRequestCreateView = ({ onNavigate }) => {
         setCompanies([]);
         setCompaniesError(null);
         setLocating(false);
+        setError(null);
       },
       (err) => {
-        const online = typeof navigator !== 'undefined' ? navigator.onLine : true;
-        const base = err?.message || 'Không thể lấy vị trí hiện tại.';
-        const hint = online
-          ? 'Vui lòng bật GPS, cấp quyền truy cập vị trí cho website và thử lại.'
-          : 'Vui lòng kiểm tra kết nối Internet (Wi‑Fi/4G) rồi thử lại.';
-        setError(`Lỗi GPS: ${base}. ${hint}`);
+        clearTimeout(timeoutId);
         setLocating(false);
+        
+        // Map error codes to user-friendly messages
+        let message = '';
+        if (err.code === 1) {
+          message = 'GPS bị từ chối: Vui lòng vào Cài đặt > Quyền riêng tư > Vị trí, cấp quyền cho trình duyệt.';
+        } else if (err.code === 2) {
+          message = 'Không thể lấy vị trí: Bật GPS/định vị trên thiết bị, đảm bảo có tín hiệu, rồi thử lại.';
+        } else if (err.code === 3) {
+          message = 'Hết thời gian chờ GPS: Tín hiệu GPS yếu hoặc kết nối mạng chậm. Thử lại ở ngoài trời.';
+        } else {
+          message = err?.message || 'Lỗi GPS không xác định';
+        }
+        setError(`Lỗi GPS: ${message}`);
       },
       {
-        enableHighAccuracy: true,
-        timeout: 10000,
+        enableHighAccuracy: false,
+        timeout: 30000,
         maximumAge: 0,
       }
     );
@@ -159,7 +174,11 @@ const RescueRequestCreateView = ({ onNavigate }) => {
         throw new Error('Vui lòng chọn công ty cứu hộ.');
       }
 
-      const result = await createRescueRequestMock({
+      if (!hasCoords) {
+        throw new Error('Vui lòng lấy tọa độ GPS (latitude/longitude) trước khi gửi yêu cầu.');
+      }
+
+      const result = await createRescueRequest({
         company_id: companyId,
         incident_desc: incidentDesc,
         location_address: address,
@@ -181,7 +200,7 @@ const RescueRequestCreateView = ({ onNavigate }) => {
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6">
           <h1 className="text-2xl font-extrabold text-gray-900">Gửi yêu cầu cứu hộ (UC201)</h1>
-          <p className="text-sm text-gray-600 mt-1">Backend tạo yêu cầu chưa hoàn thiện → frontend dùng mock API để giả lập gửi thành công.</p>
+          <p className="text-sm text-gray-600 mt-1">Gửi yêu cầu tới backend (POST /api/rescue-requests) và gán công ty đã chọn.</p>
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <div>
@@ -260,6 +279,78 @@ const RescueRequestCreateView = ({ onNavigate }) => {
               </div>
             </div>
 
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+              <p className="text-sm text-gray-700 mb-2">💡 <strong>Gợi ý:</strong> Chọn vị trí để test:</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLatitude('21.0285');
+                    setLongitude('105.8542');
+                    setError(null);
+                  }}
+                  className="text-xs bg-white border border-blue-300 text-blue-900 px-2 py-1 rounded hover:bg-blue-100"
+                >
+                  Hà Nội
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLatitude('10.7769');
+                    setLongitude('106.7009');
+                    setError(null);
+                  }}
+                  className="text-xs bg-white border border-blue-300 text-blue-900 px-2 py-1 rounded hover:bg-blue-100"
+                >
+                  TP.HCM
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLatitude('16.0544');
+                    setLongitude('108.2022');
+                    setError(null);
+                  }}
+                  className="text-xs bg-white border border-blue-300 text-blue-900 px-2 py-1 rounded hover:bg-blue-100"
+                >
+                  Đà Nẵng
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLatitude('21.0285');
+                    setLongitude('105.8542');
+                    setError(null);
+                  }}
+                  className="text-xs bg-white border border-blue-300 text-blue-900 px-2 py-1 rounded hover:bg-blue-100"
+                >
+                  Ba Đình
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLatitude('21.0048');
+                    setLongitude('105.8449');
+                    setError(null);
+                  }}
+                  className="text-xs bg-white border border-blue-300 text-blue-900 px-2 py-1 rounded hover:bg-blue-100"
+                >
+                  Hoàn Kiếm
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLatitude('20.9974');
+                    setLongitude('105.8364');
+                    setError(null);
+                  }}
+                  className="text-xs bg-white border border-blue-300 text-blue-900 px-2 py-1 rounded hover:bg-blue-100"
+                >
+                  Tây Hồ
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Hình ảnh mô tả (images_base64)</label>
               <input
@@ -274,17 +365,20 @@ const RescueRequestCreateView = ({ onNavigate }) => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <button
                 type="button"
                 onClick={handleGetLocation}
                 disabled={locating}
                 className="bg-blue-900 text-white font-bold px-4 py-2 rounded hover:bg-blue-800 disabled:opacity-60"
               >
-                {locating ? 'Đang lấy GPS...' : 'Thử lại GPS'}
+                {locating ? 'Đang lấy GPS...' : '📍 Lấy GPS hiện tại'}
               </button>
               {!canGetLocation && (
-                <span className="text-xs text-gray-500">Thiết bị/trình duyệt không hỗ trợ GPS.</span>
+                <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">⚠️ Thiết bị không hỗ trợ GPS → nhập tọa độ thủ công</span>
+              )}
+              {canGetLocation && hasCoords && (
+                <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">✅ Có tọa độ</span>
               )}
             </div>
 
@@ -305,9 +399,8 @@ const RescueRequestCreateView = ({ onNavigate }) => {
 
           {created && (
             <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="font-bold text-green-800">Gửi yêu cầu thành công (mock)</div>
+              <div className="font-bold text-green-800">Gửi yêu cầu thành công</div>
               <div className="text-sm text-green-800 mt-1">Mã yêu cầu: <span className="font-semibold">{created.id}</span></div>
-              <div className="text-xs text-green-700 mt-2">Lưu ý: Vì tạo yêu cầu đang mock, backend có thể chưa có dữ liệu tương ứng khi bạn theo dõi.</div>
               <div className="mt-3 flex gap-3">
                 <button
                   onClick={() => onNavigate('requestDetail')}

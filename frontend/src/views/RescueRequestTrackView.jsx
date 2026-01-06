@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { getLastRescueRequestId, getRescueRequestDetail, setLastRescueRequestId } from '../service/rescueRequestService';
+import { Star } from 'lucide-react';
+import { getReviewByRequestId, upsertReview } from '../service/reviewService';
+import { setLastCompanyId } from '../utils/companyStorage';
 
 function formatDateTime(value) {
   if (!value) return '';
@@ -23,25 +26,16 @@ const STATUS_LABELS = {
 function normalizeTimelineFromBackend(detail) {
   const timeline = detail?.timeline || detail?.history || null;
   if (!Array.isArray(timeline)) return null;
-  return timeline.map((item) => ({
-    status: item.status || item.newStatus || item.current_status,
-    updatedAt: item.updated_at || item.time || item.changedAt || item.updatedAt,
-    note: item.note || item.reason || '',
-  }));
-}
-
-function buildMockTimeline(detail) {
-  const createdAt = detail?.createdAt || detail?.created_at || new Date().toISOString();
-  const current = String(detail?.status || '').toUpperCase();
-  const steps = ['PENDING_CONFIRMATION', 'ACCEPTED', 'IN_TRANSIT', 'IN_PROGRESS', 'COMPLETED'];
-  const endIndex = Math.max(0, steps.indexOf(current));
-  const upto = endIndex === -1 ? ['PENDING_CONFIRMATION'] : steps.slice(0, endIndex + 1);
-  const base = new Date(createdAt).getTime();
-  return upto.map((s, idx) => ({
-    status: s,
-    updatedAt: new Date(base + idx * 5 * 60 * 1000).toISOString(),
-    note: '',
-  }));
+  return timeline
+    .filter(Boolean)
+    .map((raw) => {
+      const item = raw && typeof raw === 'object' ? raw : { status: String(raw) };
+      return {
+        status: item.status || item.newStatus || item.current_status,
+        updatedAt: item.updated_at || item.time || item.changedAt || item.updatedAt,
+        note: item.note || item.reason || '',
+      };
+    });
 }
 
 const RescueRequestTrackView = ({ onNavigate }) => {
@@ -50,6 +44,13 @@ const RescueRequestTrackView = ({ onNavigate }) => {
   const [detail, setDetail] = useState(null);
   const [timeline, setTimeline] = useState(null);
   const [selectedId, setSelectedId] = useState('');
+
+  const [ratingOpen, setRatingOpen] = useState(false);
+  const [ratingValue, setRatingValue] = useState(5);
+  const [ratingComment, setRatingComment] = useState('');
+  const [ratingSaving, setRatingSaving] = useState(false);
+  const [ratingError, setRatingError] = useState(null);
+  const [existingReview, setExistingReview] = useState(null);
 
   useEffect(() => {
     const last = getLastRescueRequestId();
@@ -74,7 +75,7 @@ const RescueRequestTrackView = ({ onNavigate }) => {
       setDetail(data);
 
       const fromBackend = normalizeTimelineFromBackend(data);
-      setTimeline(fromBackend || buildMockTimeline(data));
+      setTimeline(fromBackend || []);
     } catch (err) {
       const details = Array.isArray(err?.details) && err.details.length > 0
         ? `: ${err.details.join(', ')}`
@@ -100,6 +101,12 @@ const RescueRequestTrackView = ({ onNavigate }) => {
         userPhone: detail.user?.phone || detail.userPhoneNumber,
         address: detail.incident?.address || detail.location,
         incidentDesc: detail.incident?.desc || detail.description,
+        companyId:
+          detail.company?.id ||
+          detail.companyId ||
+          detail.company_id ||
+          detail.rescueCompanyId ||
+          detail.rescue_company_id,
         companyName: detail.company?.name || detail.companyName,
         companyPhone: detail.company?.hotline || detail.companyPhoneNumber,
         timeline: timeline,
@@ -111,12 +118,61 @@ const RescueRequestTrackView = ({ onNavigate }) => {
       }
     : null;
 
+  const isCompleted = String(viewModel?.status || '').toUpperCase() === 'COMPLETED';
+  const hasCompany = Boolean(viewModel?.companyName) || viewModel?.companyId != null;
+
+  const openRating = () => {
+    if (!isCompleted) return;
+    if (!viewModel?.id) return;
+    if (!hasCompany) return;
+
+    const review = getReviewByRequestId(viewModel.id);
+    setExistingReview(review);
+    setRatingValue(review?.rating ?? 5);
+    setRatingComment(review?.comment ?? '');
+    setRatingError(null);
+    setRatingOpen(true);
+  };
+
+  const openCompanyProfile = () => {
+    if (!viewModel?.companyId) return;
+    setLastCompanyId(viewModel.companyId);
+    onNavigate('companyProfile');
+  };
+
+  const closeRating = () => {
+    setRatingOpen(false);
+    setRatingError(null);
+  };
+
+  const submitRating = async (e) => {
+    e.preventDefault();
+    if (ratingSaving) return;
+    setRatingSaving(true);
+    setRatingError(null);
+    try {
+      await upsertReview({
+        requestId: viewModel.id,
+        companyId: viewModel.companyId ?? 0,
+        rating: ratingValue,
+        comment: ratingComment,
+      });
+      const updated = getReviewByRequestId(viewModel.id);
+      setExistingReview(updated);
+      setRatingOpen(false);
+    } catch (err) {
+      setRatingError(err?.message || 'Không thể gửi đánh giá');
+    } finally {
+      setRatingSaving(false);
+    }
+  };
+
   return (
     <div className="min-h-[80vh] bg-gray-100 py-10">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-6">
           <h1 className="text-2xl font-extrabold text-gray-900">Chi tiết yêu cầu cứu hộ</h1>
-          <p className="text-sm text-gray-600 mt-1">Dữ liệu chi tiết + timeline đang lấy từ mock để bạn xem giao diện.</p>
+          <p className="text-sm text-gray-600 mt-1">Đang lấy chi tiết từ backend (GET /api/rescue-requests/{'{id}'}). Timeline dùng dữ liệu backend.</p>
 
           {!selectedId && (
             <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-900">
@@ -153,7 +209,53 @@ const RescueRequestTrackView = ({ onNavigate }) => {
                   <div><span className="font-semibold">Khách hàng:</span> {viewModel.userName || '(không có)'} {viewModel.userPhone ? `- ${viewModel.userPhone}` : ''}</div>
                   <div className="mt-1"><span className="font-semibold">Địa chỉ:</span> {viewModel.address || '(không có)'}</div>
                   <div className="mt-1"><span className="font-semibold">Mô tả:</span> {viewModel.incidentDesc || '(không có)'}</div>
-                  <div className="mt-1"><span className="font-semibold">Công ty:</span> {viewModel.companyName || '(chưa gán)'} {viewModel.companyPhone ? `- ${viewModel.companyPhone}` : ''}</div>
+                  <div className="mt-1 flex items-center justify-between gap-3">
+                    <div>
+                      <span className="font-semibold">Công ty:</span> {viewModel.companyName || '(chưa gán)'} {viewModel.companyPhone ? `- ${viewModel.companyPhone}` : ''}
+                      {existingReview && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Bạn đã đánh giá: {existingReview.rating}/5 sao
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={openCompanyProfile}
+                        disabled={!viewModel?.companyId}
+                        className={`inline-flex items-center gap-2 font-bold px-3 py-2 rounded border ${
+                          !viewModel?.companyId
+                            ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                            : 'bg-white text-blue-900 border-blue-200 hover:bg-blue-50'
+                        }`}
+                        title={!viewModel?.companyId ? 'Không có companyId để xem hồ sơ' : 'Xem hồ sơ công ty cứu hộ'}
+                      >
+                        Hồ sơ
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={openRating}
+                        disabled={!isCompleted || !hasCompany}
+                        className={`inline-flex items-center gap-2 font-bold px-3 py-2 rounded border ${
+                          !isCompleted || !hasCompany
+                            ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                            : 'bg-yellow-500 text-blue-900 border-yellow-500 hover:bg-yellow-400'
+                        }`}
+                        title={
+                          !hasCompany
+                            ? 'Chưa có công ty để đánh giá'
+                            : !isCompleted
+                              ? 'Chỉ có thể đánh giá khi yêu cầu đã hoàn thành'
+                              : 'Đánh giá công ty cứu hộ'
+                        }
+                      >
+                        <Star size={18} />
+                        Đánh giá
+                      </button>
+                    </div>
+                  </div>
                   {(viewModel.latitude != null && viewModel.longitude != null) && (
                     <div className="mt-1"><span className="font-semibold">Tọa độ:</span> {viewModel.latitude}, {viewModel.longitude}</div>
                   )}
@@ -169,7 +271,8 @@ const RescueRequestTrackView = ({ onNavigate }) => {
                 <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="font-bold text-gray-900 mb-2">Tiến trình</div>
                   <ul className="space-y-2">
-                    {viewModel.timeline.map((item, idx) => {
+                    {viewModel.timeline.map((rawItem, idx) => {
+                      const item = rawItem && typeof rawItem === 'object' ? rawItem : { status: String(rawItem) };
                       const status = item.status || item.current_status;
                       const time = item.updated_at || item.time || item.updatedAt;
                       const note = item.note;
@@ -194,6 +297,12 @@ const RescueRequestTrackView = ({ onNavigate }) => {
                   Về danh sách
                 </button>
                 <button
+                  onClick={() => onNavigate('chat')}
+                  className="bg-blue-900 text-white font-bold px-4 py-2 rounded hover:bg-blue-800"
+                >
+                  Tin nhắn
+                </button>
+                <button
                   onClick={() => onNavigate('home')}
                   className="bg-gray-200 text-gray-900 font-bold px-4 py-2 rounded hover:bg-gray-300"
                 >
@@ -204,6 +313,91 @@ const RescueRequestTrackView = ({ onNavigate }) => {
           )}
         </div>
       </div>
+
+      {ratingOpen && viewModel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-lg bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-xl font-extrabold text-gray-900">Đánh giá công ty cứu hộ</div>
+                <div className="text-sm text-gray-600 mt-1">
+                  {viewModel.companyName || 'Công ty'} • Yêu cầu #{viewModel.id}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeRating}
+                className="bg-gray-200 text-gray-900 font-bold px-3 py-1 rounded hover:bg-gray-300"
+              >
+                Đóng
+              </button>
+            </div>
+
+            {ratingError && (
+              <div className="mt-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-2">
+                {ratingError}
+              </div>
+            )}
+
+            <form onSubmit={submitRating} className="mt-5 space-y-4">
+              <div>
+                <div className="text-sm font-bold text-gray-900">Rating</div>
+                <div className="mt-2 flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((v) => {
+                    const active = v <= ratingValue;
+                    return (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setRatingValue(v)}
+                        className={`p-1 rounded ${active ? 'text-yellow-500' : 'text-gray-300'} hover:text-yellow-500`}
+                        aria-label={`${v} sao`}
+                      >
+                        <Star size={26} fill={active ? 'currentColor' : 'none'} />
+                      </button>
+                    );
+                  })}
+                  <div className="text-sm text-gray-700 font-semibold">{ratingValue}/5</div>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm font-bold text-gray-900">Bình luận</div>
+                <textarea
+                  value={ratingComment}
+                  onChange={(e) => setRatingComment(e.target.value)}
+                  rows={4}
+                  className="mt-2 w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Chia sẻ trải nghiệm của bạn..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={closeRating}
+                  className="bg-gray-200 text-gray-900 font-bold px-4 py-2 rounded hover:bg-gray-300"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={ratingSaving}
+                  className="bg-blue-900 text-white font-bold px-4 py-2 rounded hover:bg-blue-800 disabled:opacity-60"
+                >
+                  {ratingSaving ? 'Đang gửi...' : (existingReview ? 'Cập nhật' : 'Gửi đánh giá')}
+                </button>
+              </div>
+            </form>
+
+            {!isCompleted && (
+              <div className="mt-4 text-xs text-gray-500">
+                Chỉ có thể đánh giá khi yêu cầu đã hoàn thành.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
