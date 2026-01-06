@@ -131,6 +131,19 @@ public class DataInitializer {
                             "Auto-created COMPANY account '" + username + "' for rescue company id=" + c.getId());
                 }
             }
+
+            // Create admin account if not exist
+            if (!accountRepository.existsByUsername("admin")) {
+                Account admin = new Account();
+                admin.setUsername("admin");
+                admin.setPasswordHash(passwordEncoder.encode("admin123"));
+                admin.setFullName("System Administrator");
+                admin.setPhoneNumber("0900000001");
+                admin.setEmail("admin@resqonroad.vn");
+                admin.setRole(Role.ADMIN);
+                accountRepository.save(admin);
+                System.out.println("Created admin account: admin");
+            }
         };
     }
 
