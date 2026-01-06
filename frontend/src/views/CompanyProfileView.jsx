@@ -31,7 +31,7 @@ function StarRow({ value = 0 }) {
   );
 }
 
-export default function CompanyProfileView({ onNavigate, user }) {
+export default function CompanyProfileView({ onNavigate, user, backView = 'requestDetail' }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [company, setCompany] = useState(null);
@@ -227,7 +227,7 @@ export default function CompanyProfileView({ onNavigate, user }) {
               ) : null}
               <button
                 type="button"
-                onClick={() => onNavigate('requestDetail')}
+                onClick={() => onNavigate(backView)}
                 className="bg-blue-900 text-white font-bold px-4 py-2 rounded hover:bg-blue-800"
               >
                 Quay lại

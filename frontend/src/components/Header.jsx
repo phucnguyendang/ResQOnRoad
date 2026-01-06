@@ -37,6 +37,9 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
             <button onClick={() => onNavigate('requestList')} className={`hover:text-yellow-400 ${currentView === 'requestList' ? 'text-yellow-400 font-semibold' : ''}`}>Theo dõi</button>
           )}
           <button onClick={() => onNavigate('community')} className={`hover:text-yellow-400 ${currentView === 'community' ? 'text-yellow-400 font-semibold' : ''}`}>Cộng đồng</button>
+          {user ? (
+            <button onClick={() => onNavigate('rescueCompanySearch')} className={`hover:text-yellow-400 ${currentView === 'rescueCompanySearch' ? 'text-yellow-400 font-semibold' : ''}`}>Tìm công ty</button>
+          ) : null}
           {user && user.roles?.includes('ROLE_COMPANY') && (
             <>
               <button onClick={() => onNavigate('serviceManagement')} className={`hover:text-yellow-400 ${currentView === 'serviceManagement' ? 'text-yellow-400 font-semibold' : ''}`}>Quản lý dịch vụ</button>
@@ -115,6 +118,9 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
             <button onClick={() => { onNavigate('requestList'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Theo dõi</button>
           )}
           <button onClick={() => { onNavigate('community'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Cộng đồng</button>
+          {user ? (
+            <button onClick={() => { onNavigate('rescueCompanySearch'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Tìm công ty</button>
+          ) : null}
           {user && user.roles?.includes('ROLE_COMPANY') && (
             <>
               <button onClick={() => { onNavigate('serviceManagement'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Quản lý dịch vụ</button>

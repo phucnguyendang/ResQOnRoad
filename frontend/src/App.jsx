@@ -28,6 +28,7 @@ import AdminPostManagementView from './views/AdminPostManagementView.jsx';
 import AdminRescueCompaniesView from './views/AdminRescueCompaniesView.jsx';
 import PublicUserProfileView from './views/PublicUserProfileView.jsx';
 import CommunityPostDetailView from './views/CommunityPostDetailView.jsx';
+import RescueCompanySearchView from './views/RescueCompanySearchView.jsx';
 
 import { clearAuth, loadAuth, saveAuth } from './utils/authStorage.js';
 
@@ -112,6 +113,8 @@ function App() {
         {currentView === 'adminPostManagement' && <AdminPostManagementView onNavigate={handleNavigate} />}
         {currentView === 'publicUserProfile' && <PublicUserProfileView onNavigate={handleNavigate} />}
         {currentView === 'communityPostDetail' && <CommunityPostDetailView onNavigate={handleNavigate} />}
+        {currentView === 'rescueCompanySearch' && <RescueCompanySearchView onNavigate={handleNavigate} />}
+        {currentView === 'companyProfilePublic' && <CompanyProfileView onNavigate={handleNavigate} user={user} backView="rescueCompanySearch" />}
       </div>
 
       {/* 3. Footer luôn hiển thị */}
