@@ -155,7 +155,11 @@ public class ServiceController {
                     service);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
+            String message = e.getMessage();
+            if ("Tài khoản không tồn tại".equals(message) || "Công ty cứu hộ không tồn tại".equals(message)) {
+                throw new ApiException(HttpStatus.NOT_FOUND, message);
+            }
+            throw new ApiException(HttpStatus.BAD_REQUEST, message);
         } catch (Exception e) {
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Lỗi khi tạo dịch vụ: " + e.getMessage());
@@ -187,7 +191,11 @@ public class ServiceController {
                     service);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
+            String message = e.getMessage();
+            if ("Dịch vụ không tồn tại".equals(message) || "Tài khoản không tồn tại".equals(message)) {
+                throw new ApiException(HttpStatus.NOT_FOUND, message);
+            }
+            throw new ApiException(HttpStatus.BAD_REQUEST, message);
         } catch (Exception e) {
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Lỗi khi cập nhật dịch vụ: " + e.getMessage());
@@ -213,7 +221,11 @@ public class ServiceController {
                     null);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
+            String message = e.getMessage();
+            if ("Dịch vụ không tồn tại".equals(message) || "Tài khoản không tồn tại".equals(message)) {
+                throw new ApiException(HttpStatus.NOT_FOUND, message);
+            }
+            throw new ApiException(HttpStatus.BAD_REQUEST, message);
         } catch (Exception e) {
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Lỗi khi xóa dịch vụ: " + e.getMessage());

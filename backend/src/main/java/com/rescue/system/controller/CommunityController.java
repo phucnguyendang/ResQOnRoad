@@ -68,7 +68,7 @@ public class CommunityController {
      * POST /api/community/posts
      */
     @PostMapping("/posts")
-    @PreAuthorize("hasAnyRole('USER', 'COMPANY')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
     public ResponseEntity<ApiResponse<CommunityPostDto>> createPost(
             @Valid @RequestBody CreateCommunityPostRequest request,
             @RequestHeader("Authorization") String token) {
@@ -137,7 +137,7 @@ public class CommunityController {
      * PUT /api/community/posts/{id}
      */
     @PutMapping("/posts/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'COMPANY')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
     public ResponseEntity<ApiResponse<CommunityPostDto>> updatePost(
             @PathVariable Long id,
             @Valid @RequestBody UpdateCommunityPostRequest request,
@@ -346,7 +346,7 @@ public class CommunityController {
      * GET /api/community/posts/my-posts
      */
     @GetMapping("/posts/my-posts")
-    @PreAuthorize("hasAnyRole('USER', 'COMPANY')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
     public ResponseEntity<ApiResponse<Page<CommunityPostDto>>> getMyPosts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -401,7 +401,7 @@ public class CommunityController {
      * POST /api/community/posts/{postId}/comments
      */
     @PostMapping("/posts/{postId}/comments")
-    @PreAuthorize("hasAnyRole('USER', 'COMPANY')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
     public ResponseEntity<ApiResponse<CommunityCommentDto>> addComment(
             @PathVariable Long postId,
             @Valid @RequestBody CreateCommunityCommentRequest request,
@@ -467,7 +467,7 @@ public class CommunityController {
      * PUT /api/community/comments/{commentId}
      */
     @PutMapping("/comments/{commentId}")
-    @PreAuthorize("hasAnyRole('USER', 'COMPANY')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
     public ResponseEntity<ApiResponse<CommunityCommentDto>> updateComment(
             @PathVariable Long commentId,
             @RequestBody String newContent,
@@ -516,7 +516,7 @@ public class CommunityController {
      * POST /api/community/comments/{commentId}/helpful
      */
     @PostMapping("/comments/{commentId}/helpful")
-    @PreAuthorize("hasAnyRole('USER', 'COMPANY')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
     public ResponseEntity<ApiResponse<CommunityCommentDto>> markCommentAsHelpful(
             @PathVariable Long commentId,
             @RequestHeader("Authorization") String token) {
@@ -540,7 +540,7 @@ public class CommunityController {
      * POST /api/community/comments/{commentId}/upvote
      */
     @PostMapping("/comments/{commentId}/upvote")
-    @PreAuthorize("hasAnyRole('USER', 'COMPANY')")
+    @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
     public ResponseEntity<ApiResponse<CommunityCommentDto>> upvoteComment(@PathVariable Long commentId) {
         try {
             CommunityCommentDto result = communityService.incrementHelpfulCount(commentId);
