@@ -12,4 +12,6 @@ public interface RescueStatusHistoryRepository extends JpaRepository<RescueStatu
     List<RescueStatusHistory> findByRescueRequestId(Long rescueRequestId);
     
     List<RescueStatusHistory> findByRescueRequestIdOrderByChangedAtDesc(Long rescueRequestId);
+
+    List<RescueStatusHistory> findByRescueRequestIdOrderByChangedAtAsc(Long rescueRequestId);
 }

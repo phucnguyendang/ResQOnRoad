@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,6 +21,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
@@ -45,6 +47,7 @@ public class SecurityConfig {
                                 "/api/companies/{companyId}", "/api/companies/{companyId}/services",
                                 "/api/companies/{companyId}/profile")
                         .permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         // UC103: Community Support - Public read access
                         .requestMatchers(HttpMethod.GET, "/api/community/posts", "/api/community/posts/{id}",
                                 "/api/community/posts/{id}/comments", "/api/community/posts/{id}/comments/helpful",
@@ -53,7 +56,11 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/debug/**").permitAll()
                         .requestMatchers("/error", "/actuator/**").permitAll()
+                        // UC405: Admin Moderation - Admin only access
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/users/profile").hasRole("USER")
+                        .requestMatchers("/api/company/**").hasRole("COMPANY")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

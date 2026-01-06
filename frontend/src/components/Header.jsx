@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Car, Menu, X, LogIn, UserPlus } from 'lucide-react';
+import { Car, Menu, X, LogIn, UserPlus, User } from 'lucide-react';
 
 const Header = ({ onNavigate, currentView, user, onLogout }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -23,6 +23,7 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
           <button onClick={() => onNavigate('home')} className={`hover:text-yellow-400 ${currentView === 'home' ? 'text-yellow-400 font-semibold' : ''}`}>Trang chủ</button>
           <button onClick={() => onNavigate('createRequest')} className={`hover:text-yellow-400 ${currentView === 'createRequest' ? 'text-yellow-400 font-semibold' : ''}`}>Gửi yêu cầu</button>
           <button onClick={() => onNavigate('requestList')} className={`hover:text-yellow-400 ${currentView === 'requestList' ? 'text-yellow-400 font-semibold' : ''}`}>Theo dõi</button>
+          <button onClick={() => onNavigate('community')} className={`hover:text-yellow-400 ${currentView === 'community' ? 'text-yellow-400 font-semibold' : ''}`}>Cộng đồng</button>
           <button className="hover:text-yellow-400">Dịch vụ</button>
           <button className="hover:text-yellow-400">Về chúng tôi</button>
         </nav>
@@ -32,6 +33,13 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
           {user ? (
             <div className="flex items-center space-x-2">
               <span className="text-sm">Xin chào, {user.username}</span>
+              <button
+                onClick={() => onNavigate('profile')}
+                className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm flex items-center gap-1"
+              >
+                <User size={16} />
+                Hồ sơ
+              </button>
               <button
                 onClick={onLogout}
                 className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm"
@@ -73,14 +81,18 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
           <button onClick={() => { onNavigate('home'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Trang chủ</button>
           <button onClick={() => { onNavigate('createRequest'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Gửi yêu cầu</button>
           <button onClick={() => { onNavigate('requestList'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Theo dõi</button>
+          <button onClick={() => { onNavigate('community'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Cộng đồng</button>
           <button className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Dịch vụ</button>
           {user ? (
-            <button
-              onClick={() => { onLogout(); setIsMenuOpen(false); }}
-              className="block w-full text-left py-2 bg-red-500 hover:bg-red-600 px-2 rounded"
-            >
-              Đăng xuất
-            </button>
+            <>
+              <button onClick={() => { onNavigate('profile'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Hồ sơ</button>
+              <button
+                onClick={() => { onLogout(); setIsMenuOpen(false); }}
+                className="block w-full text-left py-2 bg-red-500 hover:bg-red-600 px-2 rounded"
+              >
+                Đăng xuất
+              </button>
+            </>
           ) : (
             <>
               <button onClick={() => { onNavigate('login'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Đăng nhập</button>

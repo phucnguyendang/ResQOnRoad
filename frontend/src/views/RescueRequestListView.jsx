@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getMyRescueRequests, setLastRescueRequestId } from '../service/rescueRequestService';
+import { getMyRescueRequests, setLastRescueRequestId, cancelRescueRequest } from '../service/rescueRequestService';
 
 function formatDateTime(value) {
   if (!value) return '';
@@ -26,6 +26,8 @@ const RescueRequestListView = ({ onNavigate }) => {
   const [activeList, setActiveList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
+  const [cancelConfirmId, setCancelConfirmId] = useState(null);
 
   useEffect(() => {
     const fetchList = async () => {
@@ -60,12 +62,45 @@ const RescueRequestListView = ({ onNavigate }) => {
     onNavigate('requestDetail');
   };
 
+  const handleCancelClick = (e, id) => {
+    e.stopPropagation();
+    setCancelConfirmId(id);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelConfirmId) return;
+    
+    setCancellingId(cancelConfirmId);
+    setError(null);
+    
+    try {
+      await cancelRescueRequest(cancelConfirmId);
+      // Refresh list
+      const list = await getMyRescueRequests();
+      const normalized = Array.isArray(list) ? list : [];
+      const incomplete = normalized.filter((r) => !TERMINAL_STATUSES.has(String(r.status || '').toUpperCase()));
+      incomplete.sort((a, b) => {
+        const ta = new Date(a.updatedAt || a.createdAt || 0).getTime();
+        const tb = new Date(b.updatedAt || b.createdAt || 0).getTime();
+        return tb - ta;
+      });
+      setActiveList(incomplete);
+      setCancelConfirmId(null);
+    } catch (err) {
+      setError(err?.message || 'Không thể hủy yêu cầu');
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
   return (
     <div className="min-h-[80vh] bg-gray-100 py-10">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-6">
           <h1 className="text-2xl font-extrabold text-gray-900">Danh sách yêu cầu cứu hộ</h1>
-          <p className="text-sm text-gray-600 mt-1">Hiển thị các yêu cầu chưa hoàn thành (mock). Bạn có thể tạo yêu cầu mới để danh sách có dữ liệu.</p>
+          <p className="text-sm text-gray-600 mt-1">
+            Đang lấy dữ liệu từ backend (GET /api/rescue-requests/user/my-requests).
+          </p>
 
           <div className="mt-4">
             {loading && <div className="text-sm text-gray-700">Đang tải danh sách...</div>}
@@ -99,7 +134,18 @@ const RescueRequestListView = ({ onNavigate }) => {
                           {r.location && <div className="text-xs text-gray-500 mt-1">{r.location}</div>}
                           {time && <div className="text-xs text-gray-400 mt-1">{formatDateTime(time)}</div>}
                         </div>
-                        <div className="text-sm font-extrabold text-blue-900">Xem</div>
+                        <div className="flex items-center gap-2">
+                          {!TERMINAL_STATUSES.has(status) && (
+                            <button
+                              onClick={(e) => handleCancelClick(e, r.id)}
+                              disabled={cancellingId === r.id}
+                              className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 disabled:opacity-60"
+                            >
+                              {cancellingId === r.id ? 'Đang hủy...' : 'Hủy'}
+                            </button>
+                          )}
+                          <div className="text-sm font-extrabold text-blue-900">Xem</div>
+                        </div>
                       </div>
                     </button>
                   );
@@ -122,6 +168,33 @@ const RescueRequestListView = ({ onNavigate }) => {
               Về trang chủ
             </button>
           </div>
+
+          {/* Cancel Confirmation Modal */}
+          {cancelConfirmId && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm">
+                <h2 className="text-lg font-bold text-gray-900">Xác nhận hủy yêu cầu?</h2>
+                <p className="text-sm text-gray-600 mt-2">
+                  Bạn có chắc chắn muốn hủy yêu cầu #{cancelConfirmId} không? Hành động này không thể hoàn tác.
+                </p>
+                <div className="mt-4 flex gap-3">
+                  <button
+                    onClick={() => setCancelConfirmId(null)}
+                    className="flex-1 bg-gray-200 text-gray-900 font-bold px-4 py-2 rounded hover:bg-gray-300"
+                  >
+                    Không
+                  </button>
+                  <button
+                    onClick={handleConfirmCancel}
+                    disabled={cancellingId !== null}
+                    className="flex-1 bg-red-600 text-white font-bold px-4 py-2 rounded hover:bg-red-700 disabled:opacity-60"
+                  >
+                    {cancellingId ? 'Đang hủy...' : 'Hủy yêu cầu'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

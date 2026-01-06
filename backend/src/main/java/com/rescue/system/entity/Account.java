@@ -7,11 +7,20 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 
 @Entity
-@Table(name = "accounts")
+@Table(
+    name = "accounts",
+    uniqueConstraints = {
+        // Enforces: at most 1 account can be linked to a given rescue company.
+        // SQLite UNIQUE allows multiple NULLs, so USER/ADMIN accounts can keep company_id = NULL.
+        @UniqueConstraint(name = "uk_accounts_company_id", columnNames = { "company_id" })
+    })
 public class Account {
 
     @Id
@@ -45,6 +54,9 @@ public class Account {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
+
+    @Column(name = "locked", nullable = false)
+    private boolean locked = false;
 
     public Long getId() {
         return id;
@@ -124,5 +136,27 @@ public class Account {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void validateCompanyLink() {
+        if (role == Role.COMPANY) {
+            if (companyId == null) {
+                throw new IllegalStateException("COMPANY account must have companyId");
+            }
+        } else {
+            if (companyId != null) {
+                throw new IllegalStateException("Only COMPANY accounts can have companyId");
+            }
+        }
     }
 }

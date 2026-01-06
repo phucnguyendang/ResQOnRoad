@@ -32,10 +32,13 @@ public interface RescueCompanyRepository extends JpaRepository<RescueCompany, Lo
                         "(111.0 * sqrt((c.latitude - :userLat) * (c.latitude - :userLat) + " +
                         "(c.longitude - :userLng) * (c.longitude - :userLng) * 0.7)) AS distance " +
                         "FROM rescue_companies c " +
+                        "INNER JOIN accounts a ON a.company_id = c.id AND a.role = 'COMPANY' " +
                         "WHERE c.is_active = 1 " +
                         "AND (111.0 * sqrt((c.latitude - :userLat) * (c.latitude - :userLat) + " +
                         "(c.longitude - :userLng) * (c.longitude - :userLng) * 0.7)) <= :maxDistance " +
-                        "ORDER BY distance ASC", countQuery = "SELECT COUNT(*) FROM rescue_companies c WHERE c.is_active = 1", nativeQuery = true)
+                        "ORDER BY distance ASC", countQuery = "SELECT COUNT(*) FROM rescue_companies c " +
+                                        "INNER JOIN accounts a ON a.company_id = c.id AND a.role = 'COMPANY' " +
+                                        "WHERE c.is_active = 1", nativeQuery = true)
         Page<Object[]> findNearbyCompanies(
                         @Param("userLat") Double userLat,
                         @Param("userLng") Double userLng,
@@ -52,6 +55,7 @@ public interface RescueCompanyRepository extends JpaRepository<RescueCompany, Lo
                         "(111.0 * sqrt((c.latitude - :userLat) * (c.latitude - :userLat) + " +
                         "(c.longitude - :userLng) * (c.longitude - :userLng) * 0.7)) AS distance " +
                         "FROM rescue_companies c " +
+                        "INNER JOIN accounts a ON a.company_id = c.id AND a.role = 'COMPANY' " +
                         "INNER JOIN services s ON c.id = s.company_id " +
                         "WHERE c.is_active = 1 " +
                         "AND s.type IN (:serviceTypes) " +
@@ -59,6 +63,7 @@ public interface RescueCompanyRepository extends JpaRepository<RescueCompany, Lo
                         "AND (111.0 * sqrt((c.latitude - :userLat) * (c.latitude - :userLat) + " +
                         "(c.longitude - :userLng) * (c.longitude - :userLng) * 0.7)) <= :maxDistance " +
                         "ORDER BY distance ASC", countQuery = "SELECT COUNT(DISTINCT c.id) FROM rescue_companies c " +
+                                        "INNER JOIN accounts a ON a.company_id = c.id AND a.role = 'COMPANY' " +
                                         "INNER JOIN services s ON c.id = s.company_id " +
                                         "WHERE c.is_active = 1 AND s.type IN (:serviceTypes)", nativeQuery = true)
         Page<Object[]> findNearbyCompaniesByServiceTypes(

@@ -4,6 +4,7 @@ import com.rescue.system.dto.request.CreateRescueRequestDto;
 import com.rescue.system.dto.request.RejectRescueRequestDto;
 import com.rescue.system.dto.request.UpdateRescueStatusDto;
 import com.rescue.system.dto.response.ApiResponse;
+import com.rescue.system.dto.response.RescueRequestDetailDto;
 import com.rescue.system.dto.response.RescueRequestDto;
 import com.rescue.system.entity.RescueStatus;
 import com.rescue.system.exception.ApiException;
@@ -61,10 +62,10 @@ public class RescueRequestController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'COMPANY', 'ADMIN')")
-    public ResponseEntity<ApiResponse<RescueRequestDto>> getRescueRequest(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<RescueRequestDetailDto>> getRescueRequest(@PathVariable Long id) {
         try {
-            RescueRequestDto result = rescueRequestService.getRescueRequestById(id);
-            ApiResponse<RescueRequestDto> response = new ApiResponse<>(
+            RescueRequestDetailDto result = rescueRequestService.getRescueRequestDetailById(id);
+            ApiResponse<RescueRequestDetailDto> response = new ApiResponse<>(
                     "Lấy chi tiết yêu cầu cứu hộ thành công",
                     result
             );
