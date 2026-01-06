@@ -8,10 +8,14 @@ import com.rescue.system.dto.response.CommunityPostDto;
 import com.rescue.system.entity.Account;
 import com.rescue.system.entity.CommunityComment;
 import com.rescue.system.entity.CommunityPost;
+import com.rescue.system.entity.ContentStatus;
+import com.rescue.system.entity.ContentType;
+import com.rescue.system.entity.ModeratableContent;
 import com.rescue.system.exception.ApiException;
 import com.rescue.system.repository.AccountRepository;
 import com.rescue.system.repository.CommunityCommentRepository;
 import com.rescue.system.repository.CommunityPostRepository;
+import com.rescue.system.repository.ModeratableContentRepository;
 import com.rescue.system.service.CommunityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -41,6 +45,9 @@ public class CommunityServiceImpl implements CommunityService {
     @Autowired
     private AccountRepository accountRepository;
 
+    @Autowired
+    private ModeratableContentRepository moderatableContentRepository;
+
     // ==================== POST OPERATIONS ====================
 
     @Override
@@ -60,6 +67,18 @@ public class CommunityServiceImpl implements CommunityService {
         post.setCreatedAt(Instant.now());
 
         CommunityPost savedPost = postRepository.save(post);
+
+        // Create moderation content for UC405 - Content Moderation
+        ModeratableContent moderatableContent = new ModeratableContent(
+                ContentType.POST,
+                savedPost.getId(),
+                author,
+                savedPost.getContent(),
+                savedPost.getTitle(),
+                savedPost.getImageBase64());
+        moderatableContent.setStatus(ContentStatus.PENDING);
+        moderatableContentRepository.save(moderatableContent);
+
         return mapToPostDto(savedPost, false);
     }
 
@@ -236,6 +255,19 @@ public class CommunityServiceImpl implements CommunityService {
         }
 
         CommunityComment savedComment = commentRepository.save(comment);
+
+        // Create moderation content for UC405 - Content Moderation
+        ModeratableContent moderatableContent = new ModeratableContent(
+                ContentType.COMMENT,
+                savedComment.getId(),
+                author,
+                savedComment.getContent(),
+                null, // Comments don't have titles
+                null // Comments don't have images
+        );
+        moderatableContent.setStatus(ContentStatus.PENDING);
+        moderatableContentRepository.save(moderatableContent);
+
         return mapToCommentDto(savedComment);
     }
 

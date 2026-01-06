@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
  * Part of UC405: Content Moderation (Kiểm duyệt nội dung)
  */
 @Service
+@Transactional(readOnly = true)
 public class ContentModerationServiceImpl implements ContentModerationService {
 
     private static final Logger logger = LoggerFactory.getLogger(ContentModerationServiceImpl.class);
