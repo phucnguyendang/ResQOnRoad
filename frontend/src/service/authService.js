@@ -16,7 +16,6 @@ export async function register({
   phoneNumber,
   email,
   avatarBase64,
-  role,
 }) {
   const res = await apiRequest('/api/auth/register', {
     method: 'POST',
@@ -27,7 +26,6 @@ export async function register({
       phoneNumber,
       email,
       avatarBase64,
-      role,
     },
   });
   return res.data;

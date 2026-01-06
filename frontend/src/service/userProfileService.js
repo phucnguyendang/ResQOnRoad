@@ -3,7 +3,7 @@ import { loadAuth } from '../utils/authStorage';
 
 export async function getUserProfile() {
   const auth = loadAuth();
-  const res = await apiRequest('/users/profile', {
+  const res = await apiRequest('/api/users/profile', {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${auth?.token}`,
@@ -20,11 +20,11 @@ export async function updateUserProfile({
   const auth = loadAuth();
   const payload = {};
   
-  if (fullName !== undefined) payload.full_name = fullName;
-  if (phoneNumber !== undefined) payload.phone_number = phoneNumber;
-  if (avatarBase64 !== undefined) payload.avatar_base64 = avatarBase64;
+  if (fullName !== undefined) payload.fullName = fullName;
+  if (phoneNumber !== undefined) payload.phoneNumber = phoneNumber;
+  if (avatarBase64 !== undefined) payload.avatarBase64 = avatarBase64;
 
-  const res = await apiRequest('/users/profile', {
+  const res = await apiRequest('/api/users/profile', {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${auth?.token}`,

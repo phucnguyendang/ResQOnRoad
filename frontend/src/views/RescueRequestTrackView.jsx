@@ -3,6 +3,7 @@ import { getLastRescueRequestId, getRescueRequestDetail, setLastRescueRequestId 
 import { Star } from 'lucide-react';
 import { getReviewByRequestId, upsertReview } from '../service/reviewService';
 import { setLastCompanyId } from '../utils/companyStorage';
+import { loadAuth } from '../utils/authStorage';
 
 function formatDateTime(value) {
   if (!value) return '';
@@ -51,6 +52,10 @@ const RescueRequestTrackView = ({ onNavigate }) => {
   const [ratingSaving, setRatingSaving] = useState(false);
   const [ratingError, setRatingError] = useState(null);
   const [existingReview, setExistingReview] = useState(null);
+
+  const auth = loadAuth();
+  const role = auth?.user?.role;
+  const canRate = role === 'USER';
 
   useEffect(() => {
     const last = getLastRescueRequestId();
@@ -122,6 +127,7 @@ const RescueRequestTrackView = ({ onNavigate }) => {
   const hasCompany = Boolean(viewModel?.companyName) || viewModel?.companyId != null;
 
   const openRating = () => {
+    if (!canRate) return;
     if (!isCompleted) return;
     if (!viewModel?.id) return;
     if (!hasCompany) return;
@@ -147,6 +153,7 @@ const RescueRequestTrackView = ({ onNavigate }) => {
 
   const submitRating = async (e) => {
     e.preventDefault();
+    if (!canRate) return;
     if (ratingSaving) return;
     setRatingSaving(true);
     setRatingError(null);
@@ -237,13 +244,16 @@ const RescueRequestTrackView = ({ onNavigate }) => {
                       <button
                         type="button"
                         onClick={openRating}
-                        disabled={!isCompleted || !hasCompany}
+                        disabled={!canRate || !isCompleted || !hasCompany}
                         className={`inline-flex items-center gap-2 font-bold px-3 py-2 rounded border ${
-                          !isCompleted || !hasCompany
+                          !canRate || !isCompleted || !hasCompany
                             ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                             : 'bg-yellow-500 text-blue-900 border-yellow-500 hover:bg-yellow-400'
                         }`}
                         title={
+                          !canRate
+                            ? 'Chỉ tài khoản USER mới có thể đánh giá'
+                            :
                           !hasCompany
                             ? 'Chưa có công ty để đánh giá'
                             : !isCompleted
