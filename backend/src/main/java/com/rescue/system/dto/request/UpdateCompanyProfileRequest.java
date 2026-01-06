@@ -25,7 +25,7 @@ public class UpdateCompanyProfileRequest {
     @Email(message = "Email không hợp lệ")
     private String email;
 
-    @Pattern(regexp = "^(0|\\+84)[0-9]{9,10}$", message = "Hotline không hợp lệ")
+    @Pattern(regexp = "^[0-9]{1,20}$", message = "Hotline chỉ được chứa chữ số")
     private String hotline;
 
     private Double latitude;

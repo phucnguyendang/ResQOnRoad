@@ -15,6 +15,7 @@ export async function getUserProfile() {
 export async function updateUserProfile({
   fullName,
   phoneNumber,
+  email,
   avatarBase64,
 }) {
   const auth = loadAuth();
@@ -22,6 +23,7 @@ export async function updateUserProfile({
   
   if (fullName !== undefined) payload.fullName = fullName;
   if (phoneNumber !== undefined) payload.phoneNumber = phoneNumber;
+  if (email !== undefined) payload.email = email;
   if (avatarBase64 !== undefined) payload.avatarBase64 = avatarBase64;
 
   const res = await apiRequest('/api/users/profile', {

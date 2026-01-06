@@ -6,7 +6,8 @@ const RegisterView = ({ onNavigate }) => {
     username: '',
     password: '',
     fullName: '',
-    phone: ''
+    phone: '',
+    email: ''
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -23,6 +24,7 @@ const RegisterView = ({ onNavigate }) => {
         password: formData.password,
         fullName: formData.fullName,
         phoneNumber: formData.phone,
+        email: formData.email.trim() || undefined,
       });
 
       alert('Đăng ký thành công! Vui lòng đăng nhập.');
@@ -63,6 +65,13 @@ const RegisterView = ({ onNavigate }) => {
               placeholder="Số điện thoại"
               value={formData.phone}
               onChange={(e) => setFormData({...formData, phone: e.target.value})}
+            />
+            <input
+              type="email"
+              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              placeholder="Email (không bắt buộc)"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
             />
             <input
               type="text"
