@@ -6,9 +6,11 @@ import ServiceService from '../service/serviceService';
 import './ServiceManagementView.css';
 
 function ServiceManagementView({ companyId, isAdmin = false }) {
+    const serviceService = new ServiceService(); // Instantiate the class
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
     const [showForm, setShowForm] = useState(false);
     const [editingService, setEditingService] = useState(null);
     const [formData, setFormData] = useState({
@@ -32,11 +34,25 @@ function ServiceManagementView({ companyId, isAdmin = false }) {
             setLoading(true);
             setError(null);
 
-            const response = await ServiceService.getServicesByCompanyId(companyId);
-            setServices(response.data || []);
+            // Always use authenticated endpoint for company's own services
+            const response = await serviceService.getMyCompanyServices();
+            console.log('📋 Services loaded:', response); // DEBUG
+            
+            // Handle both array and object responses
+            let servicesArray = [];
+            if (Array.isArray(response)) {
+                servicesArray = response;
+            } else if (response?.data && Array.isArray(response.data)) {
+                servicesArray = response.data;
+            } else if (response?.data && Array.isArray(response.data.data)) {
+                servicesArray = response.data.data;
+            }
+            console.log('📊 Setting services array:', servicesArray); // DEBUG
+            setServices(servicesArray);
         } catch (err) {
             setError(err.message || 'Lỗi khi tải danh sách dịch vụ');
-            console.error('Error loading services:', err);
+            console.error('❌ Error loading services:', err); // DEBUG
+            console.error('📍 Full error:', JSON.stringify(err)); // DEBUG
         } finally {
             setLoading(false);
         }
@@ -65,28 +81,36 @@ function ServiceManagementView({ companyId, isAdmin = false }) {
         try {
             setLoading(true);
             setError(null);
+            setSuccess(null);
 
             if (editingService) {
                 // Update existing service
-                const response = await ServiceService.updateService(editingService.id, {
+                const response = await serviceService.updateService(editingService.id, {
                     ...formData,
                     basePrice: parseFloat(formData.basePrice),
                     estimatedTime: formData.estimatedTime ? parseInt(formData.estimatedTime) : null,
                 });
+                setSuccess(`Dịch vụ "${formData.name}" đã được cập nhật thành công`);
                 setEditingService(null);
             } else {
                 // Create new service
-                const response = await ServiceService.createService({
+                const response = await serviceService.createService({
                     ...formData,
                     basePrice: parseFloat(formData.basePrice),
                     estimatedTime: formData.estimatedTime ? parseInt(formData.estimatedTime) : null,
                 });
+                console.log('✅ Service created:', response); // DEBUG
+                setSuccess(`Dịch vụ "${formData.name}" đã được thêm thành công`);
             }
 
             // Reload services
+            console.log('🔄 Reloading services...'); // DEBUG
             await loadServices();
             setShowForm(false);
             resetForm();
+            
+            // Clear success message after 3 seconds
+            setTimeout(() => setSuccess(null), 3000);
         } catch (err) {
             setError(err.message || 'Lỗi khi lưu dịch vụ');
             console.error('Error saving service:', err);
@@ -112,12 +136,15 @@ function ServiceManagementView({ companyId, isAdmin = false }) {
 
     // Handle delete service
     const handleDelete = async (serviceId) => {
-        if (window.confirm('Bạn chắc chắn muốn xóa dịch vụ này?')) {
+        if (window.confirm('Bạn chắc chắn muốn xóa dịch vụ này? Thao tác này không thể hoàn tác.')) {
             try {
                 setLoading(true);
                 setError(null);
-                await ServiceService.deleteService(serviceId);
+                setSuccess(null);
+                await serviceService.deleteService(serviceId);
                 await loadServices();
+                setSuccess('Dịch vụ đã được xóa thành công');
+                setTimeout(() => setSuccess(null), 3000);
             } catch (err) {
                 setError(err.message || 'Lỗi khi xóa dịch vụ');
                 console.error('Error deleting service:', err);
@@ -150,6 +177,14 @@ function ServiceManagementView({ companyId, isAdmin = false }) {
     return (
         <div className="service-management-container">
             <h1>Quản lý Dịch vụ Cứu hộ</h1>
+
+            {/* Success message */}
+            {success && (
+                <div className="alert alert-success">
+                    {success}
+                    <button onClick={() => setSuccess(null)} className="close-btn">✕</button>
+                </div>
+            )}
 
             {/* Error message */}
             {error && (
@@ -184,7 +219,7 @@ function ServiceManagementView({ companyId, isAdmin = false }) {
                     {/* Services list */}
                     {services.length === 0 ? (
                         <div className="empty-state">
-                            <p>Chưa có dịch vụ nào. Hãy thêm dịch vụ đầu tiên!</p>
+                            <p>{isAdmin ? 'Chưa có dịch vụ nào. Hãy thêm dịch vụ đầu tiên!' : 'Công ty chưa có dịch vụ nào.'}</p>
                         </div>
                     ) : (
                         <div className="services-list">

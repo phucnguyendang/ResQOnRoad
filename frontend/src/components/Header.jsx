@@ -4,6 +4,15 @@ import { Car, Menu, X, LogIn, UserPlus, User } from 'lucide-react';
 const Header = ({ onNavigate, currentView, user, onLogout }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // DEBUG: Log user info when it changes
+  React.useEffect(() => {
+    if (user) {
+      console.log('👤 User info:', user);
+      console.log('📋 User roles:', user.roles);
+      console.log('🏢 Company ID:', user.companyId);
+    }
+  }, [user]);
+
   return (
     <header className="bg-blue-900 text-white shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -28,6 +37,12 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
             <button onClick={() => onNavigate('requestList')} className={`hover:text-yellow-400 ${currentView === 'requestList' ? 'text-yellow-400 font-semibold' : ''}`}>Theo dõi</button>
           )}
           <button onClick={() => onNavigate('community')} className={`hover:text-yellow-400 ${currentView === 'community' ? 'text-yellow-400 font-semibold' : ''}`}>Cộng đồng</button>
+          {user && (user.roles?.includes('ROLE_COMPANY') || user.roles?.includes('ROLE_ADMIN')) && (
+            <>
+              <button onClick={() => onNavigate('serviceManagement')} className={`hover:text-yellow-400 ${currentView === 'serviceManagement' ? 'text-yellow-400 font-semibold' : ''}`}>Quản lý dịch vụ</button>
+              <button onClick={() => onNavigate('vehicleManagement')} className={`hover:text-yellow-400 ${currentView === 'vehicleManagement' ? 'text-yellow-400 font-semibold' : ''}`}>Quản lý phương tiện</button>
+            </>
+          )}
           {user?.role === 'USER' && (
             <button onClick={() => onNavigate('companyRegistration')} className={`hover:text-yellow-400 ${currentView === 'companyRegistration' ? 'text-yellow-400 font-semibold' : ''}`}>Đăng ký công ty</button>
           )}
@@ -97,6 +112,12 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
             <button onClick={() => { onNavigate('requestList'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Theo dõi</button>
           )}
           <button onClick={() => { onNavigate('community'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Cộng đồng</button>
+          {user && (user.roles?.includes('ROLE_COMPANY') || user.roles?.includes('ROLE_ADMIN')) && (
+            <>
+              <button onClick={() => { onNavigate('serviceManagement'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Quản lý dịch vụ</button>
+              <button onClick={() => { onNavigate('vehicleManagement'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Quản lý phương tiện</button>
+            </>
+          )}
           {user?.role === 'USER' && (
             <button onClick={() => { onNavigate('companyRegistration'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Đăng ký công ty</button>
           )}

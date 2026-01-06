@@ -17,6 +17,15 @@ const LoginView = ({ onNavigate, onLoginSuccess }) => {
         password: formData.password,
       });
 
+      console.log('✅ Login response:', data); // DEBUG: Xem backend trả về gì
+
+      // Convert role string to ROLE_* format and roles array
+      const roleStr = data.role ? `ROLE_${data.role.toUpperCase()}` : null;
+      
+      // Try to get companyId from multiple places
+      const companyId = data.profile?.company_id || data.company_id || data.companyId;
+      console.log('🏢 Extracted companyId:', companyId); // DEBUG
+
       onLoginSuccess?.({
         token: data.token,
         account_id: data.account_id,
@@ -25,7 +34,9 @@ const LoginView = ({ onNavigate, onLoginSuccess }) => {
         user: {
           username: formData.username,
           role: data.role,
+          roles: roleStr ? [roleStr] : [], // Convert "COMPANY" → ["ROLE_COMPANY"]
           accountId: data.account_id,
+          companyId: companyId,
           fullName: data.profile?.full_name,
           avatarBase64: data.profile?.avatar_base64,
         },

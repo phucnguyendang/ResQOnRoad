@@ -4,7 +4,9 @@ import com.rescue.system.dto.request.CreateServiceRequest;
 import com.rescue.system.dto.request.UpdateServiceRequest;
 import com.rescue.system.dto.response.ApiResponse;
 import com.rescue.system.dto.response.ServiceDetailResponse;
+import com.rescue.system.entity.Account;
 import com.rescue.system.exception.ApiException;
+import com.rescue.system.repository.AccountRepository;
 import com.rescue.system.security.JwtTokenProvider;
 import com.rescue.system.service.ServiceService;
 import jakarta.validation.Valid;
@@ -37,6 +39,9 @@ public class ServiceController {
     private ServiceService serviceService;
 
     @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
     /**
@@ -54,7 +59,15 @@ public class ServiceController {
     public ResponseEntity<ApiResponse<List<ServiceDetailResponse>>> getMyCompanyServices(
             @RequestHeader("Authorization") String token) {
         try {
-            Long companyId = getAccountIdFromToken(token);
+            Long accountId = getAccountIdFromToken(token);
+            Account account = accountRepository.findById(accountId)
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Tài khoản không tồn tại"));
+            Long companyId = account.getCompanyId();
+            
+            if (companyId == null) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Tài khoản này không thuộc công ty cứu hộ nào");
+            }
+            
             List<ServiceDetailResponse> services = serviceService.getServicesByCompanyId(companyId);
 
             ApiResponse<List<ServiceDetailResponse>> response = new ApiResponse<>(

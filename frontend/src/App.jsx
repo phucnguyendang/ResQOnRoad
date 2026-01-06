@@ -16,6 +16,8 @@ import UserProfileView from './views/UserProfileView.jsx';
 import ChatView from './views/ChatView.jsx';
 import CompanyProfileView from './views/CompanyProfileView.jsx';
 import CommunityView from './views/CommunityView.jsx';
+import ServiceManagementView from './views/ServiceManagementView.jsx';
+import VehicleManagementView from './views/VehicleManagementView.jsx';
 import CompanyRegistrationCreateView from './views/CompanyRegistrationCreateView.jsx';
 import CompanyRegistrationStatusView from './views/CompanyRegistrationStatusView.jsx';
 import AdminCompanyRegistrationsView from './views/AdminCompanyRegistrationsView.jsx';
@@ -91,6 +93,8 @@ function App() {
         {currentView === 'chat' && <ChatView onNavigate={handleNavigate} />}
         {currentView === 'companyProfile' && <CompanyProfileView onNavigate={handleNavigate} />}
         {currentView === 'community' && <CommunityView onNavigate={handleNavigate} user={user} />}
+        {currentView === 'serviceManagement' && <ServiceManagementView companyId={user?.companyId} isAdmin={user?.roles?.includes('ROLE_COMPANY') || user?.roles?.includes('ROLE_ADMIN')} />}
+        {currentView === 'vehicleManagement' && <VehicleManagementView onNavigate={handleNavigate} />}
         {currentView === 'companyRegistration' && <CompanyRegistrationCreateView onNavigate={handleNavigate} />}
         {currentView === 'companyRegistrationStatus' && <CompanyRegistrationStatusView onNavigate={handleNavigate} />}
         {currentView === 'adminCompanyRegistrations' && <AdminCompanyRegistrationsView onNavigate={handleNavigate} />}

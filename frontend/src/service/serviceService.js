@@ -1,7 +1,8 @@
 // serviceService.js
 // Frontend service để tương tác với UC302 - Service Management API
 
-import apiClient from './apiClient';
+import { apiRequest } from './apiClient';
+import { loadAuth } from '../utils/authStorage';
 
 class ServiceService {
 
@@ -11,10 +12,18 @@ class ServiceService {
      */
     async getMyCompanyServices() {
         try {
-            const response = await apiClient.get('/services/company/my');
-            return response.data;
+            const auth = loadAuth();
+            const response = await apiRequest('/api/services/company/my', {
+                method: 'GET',
+                token: auth?.token,
+            });
+            console.log('🔍 getMyCompanyServices response:', response); // DEBUG
+            // Backend returns ApiResponse with data containing the list
+            return {
+                data: response.data || []
+            };
         } catch (error) {
-            throw error.response.data;
+            throw error;
         }
     }
 
@@ -24,10 +33,16 @@ class ServiceService {
      */
     async getServicesByCompanyId(companyId) {
         try {
-            const response = await apiClient.get(`/services/company/${companyId}`);
-            return response.data;
+            const response = await apiRequest(`/api/services/company/${companyId}`, {
+                method: 'GET',
+            });
+            console.log('🔍 getServicesByCompanyId response:', response); // DEBUG
+            // Backend returns ApiResponse with data containing the list
+            return {
+                data: response.data || []
+            };
         } catch (error) {
-            throw error.response.data;
+            throw error;
         }
     }
 
@@ -37,10 +52,12 @@ class ServiceService {
      */
     async getServiceById(serviceId) {
         try {
-            const response = await apiClient.get(`/services/${serviceId}`);
+            const response = await apiRequest(`/api/services/${serviceId}`, {
+                method: 'GET',
+            });
             return response.data;
         } catch (error) {
-            throw error.response.data;
+            throw error;
         }
     }
 
@@ -59,10 +76,15 @@ class ServiceService {
      */
     async createService(serviceData) {
         try {
-            const response = await apiClient.post('/services', serviceData);
+            const auth = loadAuth();
+            const response = await apiRequest('/api/services', {
+                method: 'POST',
+                body: serviceData,
+                token: auth?.token,
+            });
             return response.data;
         } catch (error) {
-            throw error.response.data;
+            throw error;
         }
     }
 
@@ -75,10 +97,15 @@ class ServiceService {
      */
     async updateService(serviceId, updateData) {
         try {
-            const response = await apiClient.put(`/services/${serviceId}`, updateData);
+            const auth = loadAuth();
+            const response = await apiRequest(`/api/services/${serviceId}`, {
+                method: 'PUT',
+                body: updateData,
+                token: auth?.token,
+            });
             return response.data;
         } catch (error) {
-            throw error.response.data;
+            throw error;
         }
     }
 
@@ -88,10 +115,14 @@ class ServiceService {
      */
     async deleteService(serviceId) {
         try {
-            const response = await apiClient.delete(`/services/${serviceId}`);
+            const auth = loadAuth();
+            const response = await apiRequest(`/api/services/${serviceId}`, {
+                method: 'DELETE',
+                token: auth?.token,
+            });
             return response.data;
         } catch (error) {
-            throw error.response.data;
+            throw error;
         }
     }
 
@@ -101,10 +132,12 @@ class ServiceService {
      */
     async getAvailableServices(companyId) {
         try {
-            const response = await apiClient.get(`/services/company/${companyId}/available`);
+            const response = await apiRequest(`/api/services/company/${companyId}/available`, {
+                method: 'GET',
+            });
             return response.data;
         } catch (error) {
-            throw error.response.data;
+            throw error;
         }
     }
 
