@@ -1,20 +1,51 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Phone, Upload, Save, X } from 'lucide-react';
 import { getUserProfile, updateUserProfile } from '../service/userProfileService';
+import { getMyCompanyProfile, updateMyCompanyProfile } from '../service/companyProfileService';
 
 const UserProfileView = ({ user, onUpdate }) => {
   const [profile, setProfile] = useState(null);
+  const [companyProfile, setCompanyProfile] = useState(null);
+  const [companyLoading, setCompanyLoading] = useState(false);
+  const [companyError, setCompanyError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
+  const role = user?.role;
+
+  const formatApiError = (err, fallbackMessage) => {
+    const base = err?.message || fallbackMessage;
+    const details = Array.isArray(err?.details) && err.details.length > 0
+      ? `: ${err.details.join(', ')}`
+      : '';
+    return `${base}${details}`;
+  };
+
   const [formData, setFormData] = useState({
     fullName: '',
     phoneNumber: '',
+    email: '',
     avatarBase64: null,
     avatarPreview: null,
+  });
+
+  const [companyFormData, setCompanyFormData] = useState({
+    name: '',
+    address: '',
+    phone: '',
+    email: '',
+    latitude: '',
+    longitude: '',
+    serviceRadius: '',
+    taxCode: '',
+    hotline: '',
+    operatingHours: '',
+    businessLicense: '',
+    licenseDocumentUrl: '',
+    description: '',
   });
 
   const fileInputRef = useRef(null);
@@ -22,33 +53,76 @@ const UserProfileView = ({ user, onUpdate }) => {
   // Load profile on mount
   useEffect(() => {
     const loadProfile = async () => {
+      setLoading(true);
+      setError(null);
+
+      // 1) Load account profile
       try {
-        setLoading(true);
-        setError(null);
         const data = await getUserProfile();
+        const fullName = data?.fullName ?? data?.full_name ?? '';
+        const phoneNumber = data?.phoneNumber ?? data?.phone_number ?? '';
+        const email = data?.email ?? '';
+        const avatarBase64 = data?.avatarBase64 ?? data?.avatar_base64 ?? null;
+
         setProfile(data);
         setFormData({
-          fullName: data.full_name || '',
-          phoneNumber: data.phone_number || '',
-          avatarBase64: data.avatar_base64 || null,
-          avatarPreview: data.avatar_base64 ? `data:image/jpeg;base64,${data.avatar_base64}` : null,
+          fullName,
+          phoneNumber,
+          email,
+          avatarBase64,
+          avatarPreview: avatarBase64 ? `data:image/jpeg;base64,${avatarBase64}` : null,
         });
       } catch (err) {
-        // Nếu lỗi, vẫn hiển thị form với giá trị mặc định (avatar trống)
+        // If error, still show cached/basic info
         setProfile(null);
+        setError(err?.message || 'Không thể tải hồ sơ người dùng');
         setFormData({
           fullName: user?.fullName || '',
           phoneNumber: user?.phoneNumber || '',
+          email: user?.email || '',
           avatarBase64: null,
           avatarPreview: null,
         });
-      } finally {
-        setLoading(false);
       }
+
+      // 2) Load company profile (independent from account profile)
+      if (role === 'COMPANY') {
+        setCompanyLoading(true);
+        setCompanyError(null);
+        try {
+          const cp = await getMyCompanyProfile();
+          setCompanyProfile(cp);
+          setCompanyFormData({
+            name: cp?.name || '',
+            address: cp?.address || '',
+            phone: cp?.phone || '',
+            email: cp?.email || '',
+            latitude: cp?.latitude != null ? String(cp.latitude) : '',
+            longitude: cp?.longitude != null ? String(cp.longitude) : '',
+            serviceRadius: cp?.serviceRadius != null ? String(cp.serviceRadius) : '',
+            taxCode: cp?.taxCode || '',
+            hotline: cp?.hotline || '',
+            operatingHours: cp?.operatingHours || '',
+            businessLicense: cp?.businessLicense || '',
+            licenseDocumentUrl: cp?.licenseDocumentUrl || '',
+            description: cp?.description || '',
+          });
+        } catch (err) {
+          setCompanyProfile(null);
+          setCompanyError(err?.message || 'Không thể tải hồ sơ công ty');
+        } finally {
+          setCompanyLoading(false);
+        }
+      } else {
+        setCompanyProfile(null);
+        setCompanyError(null);
+      }
+
+      setLoading(false);
     };
 
     loadProfile();
-  }, []);
+  }, [role]);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
@@ -88,8 +162,17 @@ const UserProfileView = ({ user, onUpdate }) => {
     setError(null);
   };
 
+  const handleCompanyInputChange = (e) => {
+    const { name, value } = e.target;
+    setCompanyFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setError(null);
+  };
+
   const handleSave = async () => {
-    // Validate
+    // Validate (account)
     if (!formData.fullName.trim()) {
       setError('Vui lòng nhập họ tên');
       return;
@@ -107,22 +190,85 @@ const UserProfileView = ({ user, onUpdate }) => {
       return;
     }
 
+    // Validate (company) before sending any request to avoid partial updates
+    if (role === 'COMPANY') {
+      if (!companyFormData.name.trim()) {
+        setError('Vui lòng nhập tên công ty');
+        return;
+      }
+      if (!companyFormData.address.trim()) {
+        setError('Vui lòng nhập địa chỉ công ty');
+        return;
+      }
+      if (!companyFormData.phone.trim()) {
+        setError('Vui lòng nhập số điện thoại công ty');
+        return;
+      }
+      const companyPhoneRegex = /^(0|\+84)[0-9]{9,10}$/;
+      if (!companyPhoneRegex.test(companyFormData.phone.replace(/\s/g, ''))) {
+        setError('Số điện thoại công ty không hợp lệ');
+        return;
+      }
+      if (companyFormData.hotline) {
+        const hotlineDigits = companyFormData.hotline.replace(/\s/g, '');
+        const hotlineRegex = /^[0-9]{1,20}$/;
+        if (!hotlineRegex.test(hotlineDigits)) {
+          setError('Hotline chỉ được chứa chữ số (tối đa 20 ký tự)');
+          return;
+        }
+      }
+      if (companyFormData.latitude === '' || Number.isNaN(Number(companyFormData.latitude))) {
+        setError('Vui lòng nhập latitude hợp lệ');
+        return;
+      }
+      if (companyFormData.longitude === '' || Number.isNaN(Number(companyFormData.longitude))) {
+        setError('Vui lòng nhập longitude hợp lệ');
+        return;
+      }
+    }
+
     setSaving(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const updated = await updateUserProfile({
+      let updatedCompany = companyProfile;
+      if (role === 'COMPANY') {
+        const companyPayload = {
+          name: companyFormData.name,
+          address: companyFormData.address,
+          phone: companyFormData.phone,
+          email: companyFormData.email || null,
+          latitude: Number(companyFormData.latitude),
+          longitude: Number(companyFormData.longitude),
+          serviceRadius: companyFormData.serviceRadius !== '' ? Number(companyFormData.serviceRadius) : null,
+          taxCode: companyFormData.taxCode || null,
+          hotline: companyFormData.hotline || null,
+          operatingHours: companyFormData.operatingHours || null,
+          businessLicense: companyFormData.businessLicense || null,
+          licenseDocumentUrl: companyFormData.licenseDocumentUrl || null,
+          description: companyFormData.description || null,
+        };
+
+        // Update company first so we don't partially update account (e.g., avatar) when company fields fail server validation
+        updatedCompany = await updateMyCompanyProfile(companyPayload);
+        setCompanyProfile(updatedCompany);
+      }
+
+      const updatedAccount = await updateUserProfile({
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
-        avatarBase64: formData.avatarBase64 !== profile?.avatar_base64 ? formData.avatarBase64 : undefined,
+        email: formData.email.trim() === '' ? null : formData.email.trim(),
+        avatarBase64: formData.avatarBase64 !== profile?.avatarBase64 ? formData.avatarBase64 : undefined,
       });
 
-      setProfile(updated);
+      setProfile(updatedAccount);
       onUpdate?.({
-        fullName: updated.full_name,
-        phoneNumber: updated.phone_number,
-        avatarBase64: updated.avatar_base64,
+        fullName: updatedAccount.fullName,
+        phoneNumber: updatedAccount.phoneNumber,
+        email: updatedAccount.email,
+        avatarBase64: updatedAccount.avatarBase64,
+        companyProfile: updatedCompany,
       });
 
       setSuccess('Cập nhật hồ sơ thành công');
@@ -130,7 +276,7 @@ const UserProfileView = ({ user, onUpdate }) => {
 
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err?.message || 'Cập nhật hồ sơ thất bại');
+      setError(formatApiError(err, 'Cập nhật hồ sơ thất bại'));
     } finally {
       setSaving(false);
     }
@@ -138,11 +284,31 @@ const UserProfileView = ({ user, onUpdate }) => {
 
   const handleCancel = () => {
     setFormData({
-      fullName: profile?.full_name || '',
-      phoneNumber: profile?.phone_number || '',
-      avatarBase64: profile?.avatar_base64 || null,
-      avatarPreview: profile?.avatar_base64 ? `data:image/jpeg;base64,${profile.avatar_base64}` : null,
+      fullName: (profile?.fullName ?? profile?.full_name) || '',
+      phoneNumber: (profile?.phoneNumber ?? profile?.phone_number) || '',
+      email: profile?.email || '',
+      avatarBase64: (profile?.avatarBase64 ?? profile?.avatar_base64) || null,
+      avatarPreview: (profile?.avatarBase64 ?? profile?.avatar_base64)
+        ? `data:image/jpeg;base64,${profile?.avatarBase64 ?? profile?.avatar_base64}`
+        : null,
     });
+    if (role === 'COMPANY' && companyProfile) {
+      setCompanyFormData({
+        name: companyProfile?.name || '',
+        address: companyProfile?.address || '',
+        phone: companyProfile?.phone || '',
+        email: companyProfile?.email || '',
+        latitude: companyProfile?.latitude != null ? String(companyProfile.latitude) : '',
+        longitude: companyProfile?.longitude != null ? String(companyProfile.longitude) : '',
+        serviceRadius: companyProfile?.serviceRadius != null ? String(companyProfile.serviceRadius) : '',
+        taxCode: companyProfile?.taxCode || '',
+        hotline: companyProfile?.hotline || '',
+        operatingHours: companyProfile?.operatingHours || '',
+        businessLicense: companyProfile?.businessLicense || '',
+        licenseDocumentUrl: companyProfile?.licenseDocumentUrl || '',
+        description: companyProfile?.description || '',
+      });
+    }
     setError(null);
     setSuccess(null);
     setIsEditing(false);
@@ -296,13 +462,284 @@ const UserProfileView = ({ user, onUpdate }) => {
               </div>
 
               {/* Email (read-only) */}
-              {profile?.email && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
-                  </label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                {isEditing ? (
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Nhập email"
+                  />
+                ) : (
                   <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-600">
-                    {profile.email}
+                    {formData.email || '—'}
+                  </div>
+                )}
+              </div>
+
+              {/* COMPANY: rescue company profile fields */}
+              {role === 'COMPANY' && (
+                <div className="pt-2">
+                  <div className="text-sm font-semibold text-gray-900 mb-3">
+                    Thông tin công ty cứu hộ
+                    {companyLoading && <span className="ml-2 text-xs font-normal text-gray-500">(đang tải...)</span>}
+                  </div>
+
+                  {companyError && (
+                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+                      {companyError}
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Tên công ty</label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          name="name"
+                          value={companyFormData.name}
+                          onChange={handleCompanyInputChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Nhập tên công ty"
+                        />
+                      ) : (
+                        <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                          {companyFormData.name || '—'}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Địa chỉ</label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          name="address"
+                          value={companyFormData.address}
+                          onChange={handleCompanyInputChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Nhập địa chỉ"
+                        />
+                      ) : (
+                        <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                          {companyFormData.address || '—'}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Điện thoại công ty</label>
+                        {isEditing ? (
+                          <input
+                            type="tel"
+                            name="phone"
+                            value={companyFormData.phone}
+                            onChange={handleCompanyInputChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Nhập số điện thoại"
+                          />
+                        ) : (
+                          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {companyFormData.phone || '—'}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Email công ty</label>
+                        {isEditing ? (
+                          <input
+                            type="email"
+                            name="email"
+                            value={companyFormData.email}
+                            onChange={handleCompanyInputChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Nhập email"
+                          />
+                        ) : (
+                          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {companyFormData.email || '—'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            name="latitude"
+                            value={companyFormData.latitude}
+                            onChange={handleCompanyInputChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="VD: 10.1234"
+                          />
+                        ) : (
+                          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {companyFormData.latitude || '—'}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            name="longitude"
+                            value={companyFormData.longitude}
+                            onChange={handleCompanyInputChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="VD: 106.1234"
+                          />
+                        ) : (
+                          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {companyFormData.longitude || '—'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Bán kính hoạt động (km)</label>
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            name="serviceRadius"
+                            value={companyFormData.serviceRadius}
+                            onChange={handleCompanyInputChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="VD: 50"
+                          />
+                        ) : (
+                          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {companyFormData.serviceRadius || '—'}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Hotline</label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            name="hotline"
+                            value={companyFormData.hotline}
+                            onChange={handleCompanyInputChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Hotline"
+                          />
+                        ) : (
+                          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {companyFormData.hotline || '—'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Mã số thuế</label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            name="taxCode"
+                            value={companyFormData.taxCode}
+                            onChange={handleCompanyInputChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Mã số thuế"
+                          />
+                        ) : (
+                          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {companyFormData.taxCode || '—'}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Giờ hoạt động</label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            name="operatingHours"
+                            value={companyFormData.operatingHours}
+                            onChange={handleCompanyInputChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="VD: 8:00-22:00"
+                          />
+                        ) : (
+                          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {companyFormData.operatingHours || '—'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Giấy phép kinh doanh</label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            name="businessLicense"
+                            value={companyFormData.businessLicense}
+                            onChange={handleCompanyInputChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Giấy phép"
+                          />
+                        ) : (
+                          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {companyFormData.businessLicense || '—'}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Link tài liệu giấy phép</label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            name="licenseDocumentUrl"
+                            value={companyFormData.licenseDocumentUrl}
+                            onChange={handleCompanyInputChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="URL tài liệu"
+                          />
+                        ) : (
+                          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                            {companyFormData.licenseDocumentUrl || '—'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
+                      {isEditing ? (
+                        <textarea
+                          name="description"
+                          value={companyFormData.description}
+                          onChange={handleCompanyInputChange}
+                          rows={3}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Mô tả"
+                        />
+                      ) : (
+                        <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 whitespace-pre-wrap">
+                          {companyFormData.description || '—'}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

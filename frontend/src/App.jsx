@@ -50,6 +50,19 @@ function App() {
     setCurrentView('home');
   };
 
+  const handleProfileUpdate = (patch) => {
+    if (!patch) return;
+    setUser((prev) => (prev ? { ...prev, ...patch } : prev));
+
+    const current = loadAuth();
+    if (current?.user) {
+      saveAuth({
+        ...current,
+        user: { ...current.user, ...patch },
+      });
+    }
+  };
+
   // Hàm điều hướng chuyển trang
   const handleNavigate = (view) => {
     setCurrentView(view);
@@ -74,7 +87,7 @@ function App() {
         {currentView === 'createRequest' && <RescueRequestCreateView onNavigate={handleNavigate} />}
         {currentView === 'requestList' && <RescueRequestListView onNavigate={handleNavigate} />}
         {currentView === 'requestDetail' && <RescueRequestTrackView onNavigate={handleNavigate} />}
-        {currentView === 'profile' && <UserProfileView user={user} onUpdate={() => {}} />}
+        {currentView === 'profile' && <UserProfileView user={user} onUpdate={handleProfileUpdate} />}
         {currentView === 'chat' && <ChatView onNavigate={handleNavigate} />}
         {currentView === 'companyProfile' && <CompanyProfileView onNavigate={handleNavigate} />}
         {currentView === 'community' && <CommunityView onNavigate={handleNavigate} user={user} />}

@@ -59,7 +59,7 @@ public class SecurityConfig {
                         // UC405: Admin Moderation - Admin only access
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/company-registrations/**").hasRole("USER")
-                        .requestMatchers("/api/users/profile").hasRole("USER")
+                        .requestMatchers("/api/users/profile").hasAnyRole("USER", "COMPANY")
                         .requestMatchers("/api/company/**").hasRole("COMPANY")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
