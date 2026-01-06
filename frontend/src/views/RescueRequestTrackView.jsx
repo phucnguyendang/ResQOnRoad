@@ -313,7 +313,6 @@ const RescueRequestTrackView = ({ onNavigate }) => {
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-6">
           <h1 className="text-2xl font-extrabold text-gray-900">Chi tiết yêu cầu cứu hộ</h1>
-          <p className="text-sm text-gray-600 mt-1">Đang lấy chi tiết từ backend (GET /api/rescue-requests/{'{id}'}). Timeline dùng dữ liệu backend.</p>
 
           {!selectedId && (
             <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-900">
@@ -442,9 +441,9 @@ const RescueRequestTrackView = ({ onNavigate }) => {
                   )}
                 </div>
                 <div className="text-xs text-gray-500 mt-3">
-                  {viewModel.createdAt && <div>Created: {formatDateTime(viewModel.createdAt)}</div>}
-                  {viewModel.updatedAt && <div>Updated: {formatDateTime(viewModel.updatedAt)}</div>}
-                  {viewModel.completedAt && <div>Completed: {formatDateTime(viewModel.completedAt)}</div>}
+                  {viewModel.createdAt && <div>Tạo lúc: {formatDateTime(viewModel.createdAt)}</div>}
+                  {viewModel.updatedAt && <div>Cập nhật lúc: {formatDateTime(viewModel.updatedAt)}</div>}
+                  {viewModel.completedAt && <div>Hoàn thành lúc: {formatDateTime(viewModel.completedAt)}</div>}
                 </div>
               </div>
 

@@ -10,6 +10,7 @@ import {
   getCommunityPosts,
   openCommunityPostComments,
 } from '../service/communityService';
+import { setLastUserId } from '../utils/userStorage';
 
 function formatDateTime(value) {
   if (!value) return '';
@@ -56,6 +57,13 @@ const CommunityView = ({ onNavigate, user }) => {
     if (String(user.role || '').toUpperCase() === 'ADMIN') return true;
     return false;
   }, [user]);
+
+  function goToUserProfile(userId) {
+    if (!userId) return;
+    setLastUserId(userId);
+    onNavigate?.('publicUserProfile');
+    window.scrollTo(0, 0);
+  }
 
   function canManagePost(post) {
     if (!user || !post) return false;
@@ -433,7 +441,13 @@ const CommunityView = ({ onNavigate, user }) => {
 
                     <div>
                       <div className="font-semibold text-gray-800">
-                        {post?.author?.fullName || post?.author?.username || 'Ẩn danh'}
+                        <button
+                          type="button"
+                          onClick={() => goToUserProfile(post?.author?.id)}
+                          className="hover:underline text-blue-900"
+                        >
+                          {post?.author?.fullName || post?.author?.username || 'Ẩn danh'}
+                        </button>
                       </div>
                       <div className="text-xs text-gray-500">{formatDateTime(post?.createdAt)}</div>
                     </div>
@@ -518,7 +532,13 @@ const CommunityView = ({ onNavigate, user }) => {
                             <div className="bg-gray-50 border rounded px-3 py-2">
                               <div className="flex items-start justify-between gap-2">
                                 <div className="text-sm font-semibold text-gray-800">
-                                  {c?.author?.fullName || c?.author?.username || 'Ẩn danh'}
+                                    <button
+                                      type="button"
+                                      onClick={() => goToUserProfile(c?.author?.id)}
+                                      className="hover:underline text-blue-900"
+                                    >
+                                      {c?.author?.fullName || c?.author?.username || 'Ẩn danh'}
+                                    </button>
                                 </div>
                                 {canManageComment(c) ? (
                                   <div className="flex items-center gap-2">

@@ -3,5 +3,6 @@ import App from './App.jsx';
 
 test('renders app brand', () => {
   render(<App />);
-  expect(screen.getByText(/ResQOnRoad/i)).toBeInTheDocument();
+  // Brand appears in multiple places (e.g., header + footer).
+  expect(screen.getAllByText('ResQOnRoad').length).toBeGreaterThan(0);
 });

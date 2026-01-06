@@ -199,8 +199,7 @@ const RescueRequestCreateView = ({ onNavigate }) => {
     <div className="min-h-[80vh] bg-gray-100 py-10">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6">
-          <h1 className="text-2xl font-extrabold text-gray-900">Gửi yêu cầu cứu hộ (UC201)</h1>
-          <p className="text-sm text-gray-600 mt-1">Gửi yêu cầu tới backend (POST /api/rescue-requests) và gán công ty đã chọn.</p>
+          <h1 className="text-2xl font-extrabold text-gray-900">Gửi yêu cầu cứu hộ</h1>
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <div>
@@ -228,11 +227,10 @@ const RescueRequestCreateView = ({ onNavigate }) => {
                   </div>
                 )}
               </button>
-              <p className="text-xs text-gray-500 mt-1">Danh sách lấy từ backend theo vị trí (GET /api/companies/search).</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả sự cố (incident_desc)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả sự cố</label>
               <textarea
                 value={incidentDesc}
                 onChange={(e) => setIncidentDesc(e.target.value)}
@@ -243,7 +241,7 @@ const RescueRequestCreateView = ({ onNavigate }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ cụ thể (location_address) <span className="text-red-600">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ cụ thể <span className="text-red-600">*</span></label>
               <input
                 type="text"
                 value={address}
@@ -256,7 +254,7 @@ const RescueRequestCreateView = ({ onNavigate }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Vĩ độ</label>
                 <input
                   type="number"
                   step="any"
@@ -267,7 +265,7 @@ const RescueRequestCreateView = ({ onNavigate }) => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Kinh độ</label>
                 <input
                   type="number"
                   step="any"
@@ -279,80 +277,8 @@ const RescueRequestCreateView = ({ onNavigate }) => {
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-              <p className="text-sm text-gray-700 mb-2">💡 <strong>Gợi ý:</strong> Chọn vị trí để test:</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLatitude('21.0285');
-                    setLongitude('105.8542');
-                    setError(null);
-                  }}
-                  className="text-xs bg-white border border-blue-300 text-blue-900 px-2 py-1 rounded hover:bg-blue-100"
-                >
-                  Hà Nội
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLatitude('10.7769');
-                    setLongitude('106.7009');
-                    setError(null);
-                  }}
-                  className="text-xs bg-white border border-blue-300 text-blue-900 px-2 py-1 rounded hover:bg-blue-100"
-                >
-                  TP.HCM
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLatitude('16.0544');
-                    setLongitude('108.2022');
-                    setError(null);
-                  }}
-                  className="text-xs bg-white border border-blue-300 text-blue-900 px-2 py-1 rounded hover:bg-blue-100"
-                >
-                  Đà Nẵng
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLatitude('21.0285');
-                    setLongitude('105.8542');
-                    setError(null);
-                  }}
-                  className="text-xs bg-white border border-blue-300 text-blue-900 px-2 py-1 rounded hover:bg-blue-100"
-                >
-                  Ba Đình
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLatitude('21.0048');
-                    setLongitude('105.8449');
-                    setError(null);
-                  }}
-                  className="text-xs bg-white border border-blue-300 text-blue-900 px-2 py-1 rounded hover:bg-blue-100"
-                >
-                  Hoàn Kiếm
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLatitude('20.9974');
-                    setLongitude('105.8364');
-                    setError(null);
-                  }}
-                  className="text-xs bg-white border border-blue-300 text-blue-900 px-2 py-1 rounded hover:bg-blue-100"
-                >
-                  Tây Hồ
-                </button>
-              </div>
-            </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Hình ảnh mô tả (images_base64)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Hình ảnh mô tả</label>
               <input
                 type="file"
                 accept="image/*"

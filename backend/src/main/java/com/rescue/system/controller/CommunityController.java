@@ -394,6 +394,30 @@ public class CommunityController {
         }
     }
 
+    /**
+     * Get posts of a user by userId (public)
+     * GET /api/community/posts/by-user/{userId}
+     */
+    @GetMapping("/posts/by-user/{userId}")
+    public ResponseEntity<ApiResponse<Page<CommunityPostDto>>> getPostsByUser(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<CommunityPostDto> result = communityService.getPostsByAuthor(userId, pageable);
+
+            ApiResponse<Page<CommunityPostDto>> response = new ApiResponse<>(
+                    "Lấy danh sách bài đăng của người dùng thành công",
+                    result);
+            return ResponseEntity.ok(response);
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Không thể lấy danh sách: " + e.getMessage());
+        }
+    }
+
     // ==================== COMMENT ENDPOINTS ====================
 
     /**

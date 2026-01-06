@@ -25,6 +25,18 @@ export async function getCommunityPosts({ page = 0, size = 10 } = {}) {
 }
 
 /**
+ * Get post detail by id (public)
+ * GET /api/community/posts/{id}
+ */
+export async function getCommunityPostDetail(postId) {
+  if (postId == null || postId === '') throw new Error('postId là bắt buộc');
+  const res = await apiRequest(`/api/community/posts/${encodeURIComponent(String(postId))}`, {
+    method: 'GET',
+  });
+  return res.data;
+}
+
+/**
  * Get current user's posts (requires login)
  * GET /api/community/posts/my-posts?page=0&size=10
  */
@@ -45,6 +57,19 @@ export async function getCompanyCommunityPosts(companyId, { page = 0, size = 10 
   if (companyId == null || companyId === '') throw new Error('companyId là bắt buộc');
   const res = await apiRequest(
     `/api/community/posts/by-company/${encodeURIComponent(String(companyId))}?page=${encodeURIComponent(String(page))}&size=${encodeURIComponent(String(size))}`,
+    { method: 'GET' },
+  );
+  return res.data;
+}
+
+/**
+ * Get a user's posts by userId (public)
+ * GET /api/community/posts/by-user/{userId}?page=0&size=10
+ */
+export async function getUserCommunityPosts(userId, { page = 0, size = 10 } = {}) {
+  if (userId == null || userId === '') throw new Error('userId là bắt buộc');
+  const res = await apiRequest(
+    `/api/community/posts/by-user/${encodeURIComponent(String(userId))}?page=${encodeURIComponent(String(page))}&size=${encodeURIComponent(String(size))}`,
     { method: 'GET' },
   );
   return res.data;

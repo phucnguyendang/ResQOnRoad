@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Star } from 'lucide-react';
 import { getCompanyDetail } from '../service/companyService';
-import { getCachedReviewsByCompanyId } from '../service/reviewService';
+import { getCachedReviewsByCompanyId, getCompanyRating, getReviewsByCompanyId } from '../service/reviewService';
 import { getLastCompanyId } from '../utils/companyStorage';
 import { getCompanyCommunityPosts } from '../service/communityService';
 
@@ -35,6 +35,11 @@ export default function CompanyProfileView({ onNavigate, user }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [company, setCompany] = useState(null);
+
+  const [ratingAvg, setRatingAvg] = useState(null);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState('');
+  const [serverReviews, setServerReviews] = useState([]);
 
   const [postsLoading, setPostsLoading] = useState(false);
   const [postsError, setPostsError] = useState('');
@@ -109,6 +114,44 @@ export default function CompanyProfileView({ onNavigate, user }) {
     };
   }, [companyId]);
 
+  useEffect(() => {
+    let alive = true;
+
+    async function loadRatingAndReviews() {
+      if (!companyId) {
+        setRatingAvg(null);
+        setServerReviews([]);
+        return;
+      }
+
+      setReviewsLoading(true);
+      setReviewsError('');
+      try {
+        const [ratingData, reviews] = await Promise.all([
+          getCompanyRating(companyId).catch(() => null),
+          getReviewsByCompanyId(companyId, { page: 1, limit: 20 }).catch(() => []),
+        ]);
+
+        if (!alive) return;
+        const avg = ratingData && ratingData.rating_avg != null ? Number(ratingData.rating_avg) : null;
+        setRatingAvg(Number.isFinite(avg) ? avg : null);
+        setServerReviews(Array.isArray(reviews) ? reviews : []);
+      } catch (e) {
+        if (!alive) return;
+        setReviewsError(e?.message || 'Không thể tải đánh giá.');
+        setRatingAvg(null);
+        setServerReviews([]);
+      } finally {
+        if (alive) setReviewsLoading(false);
+      }
+    }
+
+    loadRatingAndReviews();
+    return () => {
+      alive = false;
+    };
+  }, [companyId]);
+
   async function loadCompanyPosts({ page = 0, append = false } = {}) {
     if (!companyId) return;
     setPostsError('');
@@ -134,7 +177,6 @@ export default function CompanyProfileView({ onNavigate, user }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId]);
 
-  const serverReviews = Array.isArray(company?.reviews) ? company.reviews : [];
   const combinedReviews = useMemo(() => {
     const combined = [...serverReviews];
 
@@ -148,22 +190,21 @@ export default function CompanyProfileView({ onNavigate, user }) {
   }, [serverReviews, localReviews]);
 
   const combinedStats = useMemo(() => {
-    const serverTotal = Number(company?.totalReviews);
-    const serverAvg = Number(company?.averageRating);
-
     const localCount = localReviews.length;
     const localSum = localReviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0);
 
-    const hasServer = Number.isFinite(serverTotal) && Number.isFinite(serverAvg) && serverTotal > 0;
-    const total = (hasServer ? serverTotal : 0) + localCount;
+    const serverAvg = Number(ratingAvg);
+    const serverCount = Array.isArray(serverReviews) ? serverReviews.length : 0;
+    const hasServer = Number.isFinite(serverAvg) && serverCount > 0;
+    const total = (hasServer ? serverCount : 0) + localCount;
 
     if (total <= 0) {
       return { average: 0, total: 0 };
     }
 
-    const sum = (hasServer ? serverAvg * serverTotal : 0) + localSum;
+    const sum = (hasServer ? serverAvg * serverCount : 0) + localSum;
     return { average: sum / total, total };
-  }, [company?.totalReviews, company?.averageRating, localReviews]);
+  }, [ratingAvg, serverReviews, localReviews]);
 
   return (
     <div className="min-h-[80vh] bg-gray-100 py-10">
@@ -319,6 +360,12 @@ export default function CompanyProfileView({ onNavigate, user }) {
 
               <div className="bg-white border border-gray-200 rounded-lg p-4">
                 <div className="font-bold text-gray-900 mb-2">Đánh giá</div>
+                {reviewsLoading ? (
+                  <div className="text-sm text-gray-700">Đang tải đánh giá...</div>
+                ) : null}
+                {reviewsError ? (
+                  <div className="text-sm text-red-600 mb-2">{reviewsError}</div>
+                ) : null}
                 {combinedReviews.length === 0 ? (
                   <div className="text-sm text-gray-700">Chưa có đánh giá nào.</div>
                 ) : (

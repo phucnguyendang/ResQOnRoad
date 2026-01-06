@@ -35,3 +35,11 @@ export async function updateUserProfile({
   });
   return res.data;
 }
+
+export async function getPublicUserProfile(userId) {
+  if (userId == null || userId === '') throw new Error('userId là bắt buộc');
+  const res = await apiRequest(`/api/users/public/${encodeURIComponent(String(userId))}`, {
+    method: 'GET',
+  });
+  return res.data;
+}

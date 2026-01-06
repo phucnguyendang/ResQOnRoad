@@ -270,11 +270,11 @@ const UserProfileView = ({ user, onUpdate, onNavigate }) => {
         }
       }
       if (companyFormData.latitude === '' || Number.isNaN(Number(companyFormData.latitude))) {
-        setError('Vui lòng nhập latitude hợp lệ');
+        setError('Vui lòng nhập vĩ độ hợp lệ');
         return;
       }
       if (companyFormData.longitude === '' || Number.isNaN(Number(companyFormData.longitude))) {
-        setError('Vui lòng nhập longitude hợp lệ');
+        setError('Vui lòng nhập kinh độ hợp lệ');
         return;
       }
     }
@@ -617,7 +617,7 @@ const UserProfileView = ({ user, onUpdate, onNavigate }) => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Vĩ độ</label>
                         {isEditing ? (
                           <input
                             type="number"
@@ -635,7 +635,7 @@ const UserProfileView = ({ user, onUpdate, onNavigate }) => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Kinh độ</label>
                         {isEditing ? (
                           <input
                             type="number"

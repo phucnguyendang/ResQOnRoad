@@ -2,6 +2,7 @@ package com.rescue.system.controller;
 
 import com.rescue.system.dto.request.UpdateUserProfileRequest;
 import com.rescue.system.dto.response.ApiResponse;
+import com.rescue.system.dto.response.PublicUserProfileResponse;
 import com.rescue.system.dto.response.UserProfileResponse;
 import com.rescue.system.entity.Account;
 import com.rescue.system.repository.AccountRepository;
@@ -9,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -46,6 +48,28 @@ public class UserController {
                 .build();
 
         return ApiResponse.of("Lấy profile thành công", response);
+    }
+
+    /**
+     * Public profile for viewing other users.
+     * GET /api/users/public/{id}
+     */
+    @GetMapping("/public/{id}")
+    public ApiResponse<PublicUserProfileResponse> getPublicProfile(@PathVariable Long id) {
+        Account account = accountRepository
+                .findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        PublicUserProfileResponse response = PublicUserProfileResponse.builder()
+                .id(account.getId())
+                .username(account.getUsername())
+                .fullName(account.getFullName())
+                .avatarBase64(account.getAvatarBase64())
+            .role(account.getRole() != null ? account.getRole().name() : null)
+            .companyId(account.getCompanyId())
+                .build();
+
+        return ApiResponse.of("Lấy public profile thành công", response);
     }
 
     @PutMapping("/profile")

@@ -46,6 +46,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/welcome").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/users/public/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/companies/**").permitAll()
                 // UC302: Service Management - Public read access
                 .requestMatchers(HttpMethod.GET, "/api/services/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/companies/search", "/api/companies/nearby",
@@ -57,7 +59,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/community/posts", "/api/community/posts/{id}",
                                 "/api/community/posts/{id}/comments", "/api/community/posts/{id}/comments/helpful",
                                 "/api/community/posts/search", "/api/community/posts/nearby",
-                                "/api/community/posts/unresolved", "/api/community/posts/popular")
+                            "/api/community/posts/unresolved", "/api/community/posts/popular",
+                            "/api/community/posts/by-company/{companyId}", "/api/community/posts/by-user/{userId}")
                         .permitAll()
                         .requestMatchers("/api/debug/**").permitAll()
                         .requestMatchers("/error", "/actuator/**").permitAll()

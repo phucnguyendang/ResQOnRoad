@@ -25,6 +25,9 @@ import AdminCompanyRegistrationsView from './views/AdminCompanyRegistrationsView
 import AdminWorkflowView from './views/AdminWorkflowView.jsx';
 import AccountModerationView from './views/AccountModerationView.jsx';
 import AdminPostManagementView from './views/AdminPostManagementView.jsx';
+import AdminRescueCompaniesView from './views/AdminRescueCompaniesView.jsx';
+import PublicUserProfileView from './views/PublicUserProfileView.jsx';
+import CommunityPostDetailView from './views/CommunityPostDetailView.jsx';
 
 import { clearAuth, loadAuth, saveAuth } from './utils/authStorage.js';
 
@@ -103,9 +106,12 @@ function App() {
         {currentView === 'companyRegistration' && <CompanyRegistrationCreateView onNavigate={handleNavigate} />}
         {currentView === 'companyRegistrationStatus' && <CompanyRegistrationStatusView onNavigate={handleNavigate} />}
         {currentView === 'adminCompanyRegistrations' && <AdminCompanyRegistrationsView onNavigate={handleNavigate} />}
+        {currentView === 'adminRescueCompanies' && <AdminRescueCompaniesView onNavigate={handleNavigate} />}
         {currentView === 'adminWorkflows' && <AdminWorkflowView onNavigate={handleNavigate} />}
         {currentView === 'moderation' && <AccountModerationView onNavigate={handleNavigate} />}
         {currentView === 'adminPostManagement' && <AdminPostManagementView onNavigate={handleNavigate} />}
+        {currentView === 'publicUserProfile' && <PublicUserProfileView onNavigate={handleNavigate} />}
+        {currentView === 'communityPostDetail' && <CommunityPostDetailView onNavigate={handleNavigate} />}
       </div>
 
       {/* 3. Footer luôn hiển thị */}

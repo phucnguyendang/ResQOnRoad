@@ -175,8 +175,8 @@ export default function CompanyRegistrationCreateView({ onNavigate }) {
                 )}
               </div>
 
-              <input className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Vĩ độ (latitude) *" value={form.latitude} onChange={setField('latitude')} required />
-              <input className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Kinh độ (longitude) *" value={form.longitude} onChange={setField('longitude')} required />
+              <input className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Vĩ độ *" value={form.latitude} onChange={setField('latitude')} required />
+              <input className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Kinh độ *" value={form.longitude} onChange={setField('longitude')} required />
 
               <input className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Bán kính hoạt động (km)" value={form.serviceRadius} onChange={setField('serviceRadius')} />
               <input className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Hotline" value={form.hotline} onChange={setField('hotline')} />

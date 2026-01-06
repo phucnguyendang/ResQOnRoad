@@ -125,7 +125,7 @@ public class CommunityServiceImpl implements CommunityService {
     @Override
     @Transactional(readOnly = true)
     public Page<CommunityPostDto> getPostsByAuthor(Long authorId, Pageable pageable) {
-        return postRepository.findByAuthorIdOrderByCreatedAtDesc(authorId, pageable)
+        return postRepository.findByAuthorIdAndIsDeletedFalseOrderByCreatedAtDesc(authorId, pageable)
                 .map(post -> mapToPostDto(post, false));
     }
 

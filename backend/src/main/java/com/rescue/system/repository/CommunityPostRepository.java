@@ -43,6 +43,8 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
         */
        Page<CommunityPost> findByAuthorIdOrderByCreatedAtDesc(Long authorId, Pageable pageable);
 
+       Page<CommunityPost> findByAuthorIdAndIsDeletedFalseOrderByCreatedAtDesc(Long authorId, Pageable pageable);
+
        /**
         * Find posts by incident type
         */
