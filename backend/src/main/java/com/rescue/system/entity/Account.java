@@ -12,6 +12,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
+import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @Table(
@@ -56,6 +57,7 @@ public class Account {
     private Instant createdAt = Instant.now();
 
     @Column(name = "locked", nullable = false)
+    @ColumnDefault("0")
     private boolean locked = false;
 
     public Long getId() {
