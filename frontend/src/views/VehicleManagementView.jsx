@@ -29,8 +29,10 @@ export default function VehicleManagementView({ onNavigate }) {
     setError(null);
     try {
       const data = await getCompanyVehicles();
+      console.log('Vehicles loaded:', data);
       setVehicles(Array.isArray(data) ? data : []);
     } catch (err) {
+      console.error('Error loading vehicles:', err);
       setError(err?.message || 'Lỗi khi tải danh sách phương tiện');
       setVehicles([]);
     } finally {

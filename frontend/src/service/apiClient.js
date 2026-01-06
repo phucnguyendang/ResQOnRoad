@@ -16,7 +16,10 @@ async function parseJsonSafe(res) {
 }
 
 export async function apiRequest(path, { method = 'GET', body, token, headers } = {}) {
-  const res = await fetch(buildUrl(path), {
+  const url = buildUrl(path);
+  console.log(`🌐 API ${method} ${url}`, { token: token ? '✓' : '✗', body }); // DEBUG
+  
+  const res = await fetch(url, {
     method,
     headers: {
       'Content-Type': 'application/json',
@@ -27,6 +30,7 @@ export async function apiRequest(path, { method = 'GET', body, token, headers } 
   });
 
   const payload = await parseJsonSafe(res);
+  console.log(`📨 API Response ${res.status}:`, payload); // DEBUG
 
   if (!res.ok) {
     // Backend error format: { error: { code, message, details: [] } }
@@ -37,6 +41,7 @@ export async function apiRequest(path, { method = 'GET', body, token, headers } 
     err.status = res.status;
     err.details = details;
     err.payload = payload;
+    console.error(`❌ API Error ${res.status}:`, message, details); // DEBUG
     throw err;
   }
 

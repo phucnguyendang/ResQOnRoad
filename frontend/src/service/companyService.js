@@ -21,3 +21,16 @@ export async function getCompanyDetail(companyId) {
   const res = await apiRequest(`/api/companies/${encodeURIComponent(String(companyId))}`, { method: 'GET' });
   return res.data; // CompanyDetailResponse
 }
+
+export async function getCompanyVehicles() {
+  const res = await apiRequest('/api/company/vehicles', { method: 'GET' });
+  return res.data || [];
+}
+
+export async function createCompanyVehicle(vehicleData) {
+  const res = await apiRequest('/api/company/vehicles', {
+    method: 'POST',
+    body: JSON.stringify(vehicleData)
+  });
+  return res.data;
+}
