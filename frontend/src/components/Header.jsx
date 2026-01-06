@@ -24,6 +24,12 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
           <button onClick={() => onNavigate('createRequest')} className={`hover:text-yellow-400 ${currentView === 'createRequest' ? 'text-yellow-400 font-semibold' : ''}`}>Gửi yêu cầu</button>
           <button onClick={() => onNavigate('requestList')} className={`hover:text-yellow-400 ${currentView === 'requestList' ? 'text-yellow-400 font-semibold' : ''}`}>Theo dõi</button>
           <button onClick={() => onNavigate('community')} className={`hover:text-yellow-400 ${currentView === 'community' ? 'text-yellow-400 font-semibold' : ''}`}>Cộng đồng</button>
+          {user?.role === 'USER' && (
+            <button onClick={() => onNavigate('companyRegistration')} className={`hover:text-yellow-400 ${currentView === 'companyRegistration' ? 'text-yellow-400 font-semibold' : ''}`}>Đăng ký công ty</button>
+          )}
+          {user?.role === 'ADMIN' && (
+            <button onClick={() => onNavigate('adminCompanyRegistrations')} className={`hover:text-yellow-400 ${currentView === 'adminCompanyRegistrations' ? 'text-yellow-400 font-semibold' : ''}`}>Duyệt công ty</button>
+          )}
           <button className="hover:text-yellow-400">Dịch vụ</button>
           <button className="hover:text-yellow-400">Về chúng tôi</button>
         </nav>
@@ -82,6 +88,12 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
           <button onClick={() => { onNavigate('createRequest'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Gửi yêu cầu</button>
           <button onClick={() => { onNavigate('requestList'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Theo dõi</button>
           <button onClick={() => { onNavigate('community'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Cộng đồng</button>
+          {user?.role === 'USER' && (
+            <button onClick={() => { onNavigate('companyRegistration'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Đăng ký công ty</button>
+          )}
+          {user?.role === 'ADMIN' && (
+            <button onClick={() => { onNavigate('adminCompanyRegistrations'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Duyệt công ty</button>
+          )}
           <button className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Dịch vụ</button>
           {user ? (
             <>

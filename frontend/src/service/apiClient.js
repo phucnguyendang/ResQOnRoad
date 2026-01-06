@@ -1,3 +1,5 @@
+// Backend is configured with server.servlet.context-path=/v1
+// (see backend/src/main/resources/application.properties)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/v1';
 
 function buildUrl(path) {
