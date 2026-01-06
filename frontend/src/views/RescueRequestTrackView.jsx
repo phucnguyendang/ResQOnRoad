@@ -1,5 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { getLastRescueRequestId, getRescueRequestDetail, setLastRescueRequestId } from '../service/rescueRequestService';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  acceptRescueRequest,
+  cancelRescueRequest,
+  getLastRescueRequestId,
+  getRescueRequestDetail,
+  rejectRescueRequest,
+  setLastRescueRequestId,
+  updateRescueRequestStatus,
+} from '../service/rescueRequestService';
 import { Star } from 'lucide-react';
 import { getReviewByRequestId, upsertReview } from '../service/reviewService';
 import { setLastCompanyId } from '../utils/companyStorage';
@@ -14,6 +22,14 @@ function formatDateTime(value) {
   }
 }
 
+function normalizeImageSrc(raw) {
+  if (!raw) return '';
+  const value = String(raw);
+  if (value.startsWith('data:')) return value;
+  // Fallback: treat as plain base64 (most common is jpeg)
+  return `data:image/jpeg;base64,${value}`;
+}
+
 const STATUS_LABELS = {
   PENDING_CONFIRMATION: 'Đang chờ xác nhận',
   ACCEPTED: 'Đã tiếp nhận',
@@ -23,6 +39,8 @@ const STATUS_LABELS = {
   REJECTED_BY_COMPANY: 'Bị từ chối',
   CANCELLED_BY_USER: 'Đã hủy',
 };
+
+const TERMINAL_STATUSES = new Set(['COMPLETED', 'REJECTED_BY_COMPANY', 'CANCELLED_BY_USER']);
 
 function normalizeTimelineFromBackend(detail) {
   const timeline = detail?.timeline || detail?.history || null;
@@ -45,6 +63,10 @@ const RescueRequestTrackView = ({ onNavigate }) => {
   const [detail, setDetail] = useState(null);
   const [timeline, setTimeline] = useState(null);
   const [selectedId, setSelectedId] = useState('');
+
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [requestActionLoading, setRequestActionLoading] = useState(false);
+  const [requestActionError, setRequestActionError] = useState(null);
 
   const [ratingOpen, setRatingOpen] = useState(false);
   const [ratingValue, setRatingValue] = useState(5);
@@ -106,6 +128,9 @@ const RescueRequestTrackView = ({ onNavigate }) => {
         userPhone: detail.user?.phone || detail.userPhoneNumber,
         address: detail.incident?.address || detail.location,
         incidentDesc: detail.incident?.desc || detail.description,
+        imagesBase64: Array.isArray(detail.incident?.imagesBase64)
+          ? detail.incident.imagesBase64
+          : (Array.isArray(detail.imagesBase64) ? detail.imagesBase64 : []),
         companyId:
           detail.company?.id ||
           detail.companyId ||
@@ -122,6 +147,35 @@ const RescueRequestTrackView = ({ onNavigate }) => {
         longitude: detail.longitude,
       }
     : null;
+
+  const statusUpper = String(viewModel?.status || '').toUpperCase();
+  const isTerminal = TERMINAL_STATUSES.has(statusUpper);
+  const canCancelByUser = role === 'USER' && Boolean(viewModel?.id) && !isTerminal;
+
+  const companyPrimaryAction = useMemo(() => {
+    if (role !== 'COMPANY') return null;
+    if (!viewModel?.id) return null;
+    if (isTerminal) return null;
+
+    // Simple linear progression for company-side request handling
+    // PENDING_CONFIRMATION -> ACCEPTED -> IN_TRANSIT -> IN_PROGRESS -> COMPLETED
+    if (statusUpper === 'PENDING_CONFIRMATION') {
+      return { label: 'Nhận yêu cầu', kind: 'accept' };
+    }
+    if (statusUpper === 'ACCEPTED') {
+      return { label: 'Bắt đầu di chuyển', kind: 'status', nextStatus: 'IN_TRANSIT' };
+    }
+    if (statusUpper === 'IN_TRANSIT') {
+      return { label: 'Bắt đầu xử lý', kind: 'status', nextStatus: 'IN_PROGRESS' };
+    }
+    if (statusUpper === 'IN_PROGRESS') {
+      return { label: 'Hoàn thành', kind: 'status', nextStatus: 'COMPLETED' };
+    }
+
+    return null;
+  }, [isTerminal, role, statusUpper, viewModel?.id]);
+
+  const canRejectByCompany = role === 'COMPANY' && Boolean(viewModel?.id) && statusUpper === 'PENDING_CONFIRMATION';
 
   const isCompleted = String(viewModel?.status || '').toUpperCase() === 'COMPLETED';
   const hasCompany = Boolean(viewModel?.companyName) || viewModel?.companyId != null;
@@ -174,6 +228,86 @@ const RescueRequestTrackView = ({ onNavigate }) => {
     }
   };
 
+  const refreshDetail = async () => {
+    if (!selectedId) return;
+    await fetchDetail(selectedId);
+  };
+
+  const handleCancelRequest = async () => {
+    if (!viewModel?.id) return;
+    if (!canCancelByUser) return;
+    if (requestActionLoading) return;
+
+    setRequestActionLoading(true);
+    setRequestActionError(null);
+    try {
+      await cancelRescueRequest(viewModel.id);
+      setCancelConfirmOpen(false);
+      await refreshDetail();
+    } catch (err) {
+      const details = Array.isArray(err?.details) && err.details.length > 0
+        ? `: ${err.details.join(', ')}`
+        : '';
+      setRequestActionError(`${err?.message || 'Không thể hủy yêu cầu'}${details}`);
+    } finally {
+      setRequestActionLoading(false);
+    }
+  };
+
+  const handleCompanyPrimaryAction = async () => {
+    if (!companyPrimaryAction) return;
+    if (!viewModel?.id) return;
+    if (requestActionLoading) return;
+
+    setRequestActionLoading(true);
+    setRequestActionError(null);
+    try {
+      if (companyPrimaryAction.kind === 'accept') {
+        await acceptRescueRequest(viewModel.id);
+      } else if (companyPrimaryAction.kind === 'status') {
+        await updateRescueRequestStatus(viewModel.id, {
+          status: companyPrimaryAction.nextStatus,
+          note: null,
+        });
+      }
+      await refreshDetail();
+    } catch (err) {
+      const details = Array.isArray(err?.details) && err.details.length > 0
+        ? `: ${err.details.join(', ')}`
+        : '';
+      setRequestActionError(`${err?.message || 'Không thể cập nhật trạng thái'}${details}`);
+    } finally {
+      setRequestActionLoading(false);
+    }
+  };
+
+  const handleCompanyReject = async () => {
+    if (!canRejectByCompany) return;
+    if (!viewModel?.id) return;
+    if (requestActionLoading) return;
+
+    const reason = window.prompt('Nhập lý do từ chối yêu cầu:', 'Không thể tiếp nhận yêu cầu vào lúc này');
+    if (reason === null) return; // user cancelled prompt
+    if (!String(reason).trim()) {
+      setRequestActionError('Vui lòng nhập lý do từ chối.');
+      return;
+    }
+
+    setRequestActionLoading(true);
+    setRequestActionError(null);
+    try {
+      await rejectRescueRequest(viewModel.id, reason);
+      await refreshDetail();
+    } catch (err) {
+      const details = Array.isArray(err?.details) && err.details.length > 0
+        ? `: ${err.details.join(', ')}`
+        : '';
+      setRequestActionError(`${err?.message || 'Không thể từ chối yêu cầu'}${details}`);
+    } finally {
+      setRequestActionLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-[80vh] bg-gray-100 py-10">
       <div className="container mx-auto px-4">
@@ -201,6 +335,12 @@ const RescueRequestTrackView = ({ onNavigate }) => {
             </div>
           )}
 
+          {requestActionError && (
+            <div className="mt-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-2">
+              {requestActionError}
+            </div>
+          )}
+
           {selectedId && loading && (
             <div className="mt-4 text-sm text-gray-700">Đang tải chi tiết...</div>
           )}
@@ -216,6 +356,37 @@ const RescueRequestTrackView = ({ onNavigate }) => {
                   <div><span className="font-semibold">Khách hàng:</span> {viewModel.userName || '(không có)'} {viewModel.userPhone ? `- ${viewModel.userPhone}` : ''}</div>
                   <div className="mt-1"><span className="font-semibold">Địa chỉ:</span> {viewModel.address || '(không có)'}</div>
                   <div className="mt-1"><span className="font-semibold">Mô tả:</span> {viewModel.incidentDesc || '(không có)'}</div>
+
+                  {Array.isArray(viewModel.imagesBase64) && viewModel.imagesBase64.length > 0 && (
+                    <div className="mt-3">
+                      <div className="font-semibold">Hình ảnh:</div>
+                      <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {viewModel.imagesBase64
+                          .filter(Boolean)
+                          .map((raw, idx) => {
+                            const src = normalizeImageSrc(raw);
+                            return (
+                              <a
+                                key={idx}
+                                href={src}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="block"
+                                title="Mở ảnh"
+                              >
+                                <img
+                                  src={src}
+                                  alt={`Ảnh sự cố ${idx + 1}`}
+                                  className="w-full h-28 object-cover rounded border border-gray-200 bg-white"
+                                  loading="lazy"
+                                />
+                              </a>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mt-1 flex items-center justify-between gap-3">
                     <div>
                       <span className="font-semibold">Công ty:</span> {viewModel.companyName || '(chưa gán)'} {viewModel.companyPhone ? `- ${viewModel.companyPhone}` : ''}
@@ -306,6 +477,45 @@ const RescueRequestTrackView = ({ onNavigate }) => {
                 >
                   Về danh sách
                 </button>
+
+                {role === 'USER' && (
+                  <button
+                    type="button"
+                    onClick={() => setCancelConfirmOpen(true)}
+                    disabled={!canCancelByUser || requestActionLoading}
+                    className={`font-bold px-4 py-2 rounded disabled:opacity-60 ${
+                      !canCancelByUser
+                        ? 'bg-gray-100 text-gray-400'
+                        : 'bg-red-600 text-white hover:bg-red-700'
+                    }`}
+                    title={!canCancelByUser ? 'Không thể hủy ở trạng thái hiện tại' : 'Hủy yêu cầu cứu hộ'}
+                  >
+                    {requestActionLoading && cancelConfirmOpen ? 'Đang hủy...' : 'Hủy yêu cầu'}
+                  </button>
+                )}
+
+                {role === 'COMPANY' && companyPrimaryAction && (
+                  <button
+                    type="button"
+                    onClick={handleCompanyPrimaryAction}
+                    disabled={requestActionLoading}
+                    className="bg-yellow-500 text-blue-900 font-extrabold px-4 py-2 rounded hover:bg-yellow-400 disabled:opacity-60"
+                  >
+                    {requestActionLoading ? 'Đang cập nhật...' : companyPrimaryAction.label}
+                  </button>
+                )}
+
+                {role === 'COMPANY' && canRejectByCompany && (
+                  <button
+                    type="button"
+                    onClick={handleCompanyReject}
+                    disabled={requestActionLoading}
+                    className="bg-red-600 text-white font-bold px-4 py-2 rounded hover:bg-red-700 disabled:opacity-60"
+                  >
+                    {requestActionLoading ? 'Đang xử lý...' : 'Từ chối'}
+                  </button>
+                )}
+
                 <button
                   onClick={() => onNavigate('chat')}
                   className="bg-blue-900 text-white font-bold px-4 py-2 rounded hover:bg-blue-800"
@@ -323,6 +533,35 @@ const RescueRequestTrackView = ({ onNavigate }) => {
           )}
         </div>
       </div>
+
+      {cancelConfirmOpen && canCancelByUser && viewModel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+            <h2 className="text-lg font-bold text-gray-900">Xác nhận hủy yêu cầu?</h2>
+            <p className="text-sm text-gray-600 mt-2">
+              Bạn có chắc chắn muốn hủy yêu cầu #{viewModel.id} không? Hành động này không thể hoàn tác.
+            </p>
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setCancelConfirmOpen(false)}
+                disabled={requestActionLoading}
+                className="flex-1 bg-gray-200 text-gray-900 font-bold px-4 py-2 rounded hover:bg-gray-300 disabled:opacity-60"
+              >
+                Không
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelRequest}
+                disabled={requestActionLoading}
+                className="flex-1 bg-red-600 text-white font-bold px-4 py-2 rounded hover:bg-red-700 disabled:opacity-60"
+              >
+                {requestActionLoading ? 'Đang hủy...' : 'Hủy yêu cầu'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {ratingOpen && viewModel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">

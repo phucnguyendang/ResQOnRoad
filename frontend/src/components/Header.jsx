@@ -49,9 +49,6 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
           {user?.role === 'ADMIN' && (
             <button onClick={() => onNavigate('adminCompanyRegistrations')} className={`hover:text-yellow-400 ${currentView === 'adminCompanyRegistrations' ? 'text-yellow-400 font-semibold' : ''}`}>Duyệt công ty</button>
           )}
-          {user?.role === 'COMPANY' && (
-            <button className="hover:text-yellow-400">Dịch vụ</button>
-          )}
         </nav>
 
         {/* Auth Buttons */}
@@ -123,9 +120,6 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
           )}
           {user?.role === 'ADMIN' && (
             <button onClick={() => { onNavigate('adminCompanyRegistrations'); setIsMenuOpen(false); }} className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Duyệt công ty</button>
-          )}
-          {user?.role === 'COMPANY' && (
-            <button className="block w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Dịch vụ</button>
           )}
           {user ? (
             <>

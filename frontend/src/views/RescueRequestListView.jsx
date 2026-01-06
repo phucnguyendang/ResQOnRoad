@@ -52,15 +52,17 @@ const RescueRequestListView = ({ onNavigate }) => {
           : await getMyRescueRequests();
 
         const normalized = Array.isArray(list) ? list : [];
-        const incomplete = normalized.filter((r) => !TERMINAL_STATUSES.has(String(r.status || '').toUpperCase()));
 
-        incomplete.sort((a, b) => {
+        // Show both in-progress and processed requests so users can revisit and rate completed ones.
+        const allRequests = normalized;
+
+        allRequests.sort((a, b) => {
           const ta = new Date(a.updatedAt || a.createdAt || 0).getTime();
           const tb = new Date(b.updatedAt || b.createdAt || 0).getTime();
           return tb - ta;
         });
 
-        setActiveList(incomplete);
+        setActiveList(allRequests);
       } catch (err) {
         setActiveList([]);
         setError(err?.message || 'Không thể tải danh sách yêu cầu');
@@ -95,13 +97,15 @@ const RescueRequestListView = ({ onNavigate }) => {
       // Refresh list
       const list = await getMyRescueRequests();
       const normalized = Array.isArray(list) ? list : [];
-      const incomplete = normalized.filter((r) => !TERMINAL_STATUSES.has(String(r.status || '').toUpperCase()));
-      incomplete.sort((a, b) => {
+
+      const allRequests = normalized;
+      allRequests.sort((a, b) => {
         const ta = new Date(a.updatedAt || a.createdAt || 0).getTime();
         const tb = new Date(b.updatedAt || b.createdAt || 0).getTime();
         return tb - ta;
       });
-      setActiveList(incomplete);
+
+      setActiveList(allRequests);
       setCancelConfirmId(null);
     } catch (err) {
       setError(err?.message || 'Không thể hủy yêu cầu');
@@ -130,7 +134,7 @@ const RescueRequestListView = ({ onNavigate }) => {
             )}
 
             {!loading && !error && activeList.length === 0 && (
-              <div className="text-sm text-gray-700">Chưa có yêu cầu nào đang xử lý.</div>
+              <div className="text-sm text-gray-700">Chưa có yêu cầu nào.</div>
             )}
 
             {activeList.length > 0 && (

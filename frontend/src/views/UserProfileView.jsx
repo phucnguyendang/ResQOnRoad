@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { User, Phone, Upload, Save, X } from 'lucide-react';
 import { getUserProfile, updateUserProfile } from '../service/userProfileService';
 import { getMyCompanyProfile, updateMyCompanyProfile } from '../service/companyProfileService';
@@ -8,6 +8,7 @@ const UserProfileView = ({ user, onUpdate }) => {
   const [companyProfile, setCompanyProfile] = useState(null);
   const [companyLoading, setCompanyLoading] = useState(false);
   const [companyError, setCompanyError] = useState(null);
+  const [companyLocating, setCompanyLocating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -15,6 +16,7 @@ const UserProfileView = ({ user, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
 
   const role = user?.role;
+  const canGetLocation = useMemo(() => typeof navigator !== 'undefined' && !!navigator.geolocation, []);
 
   const formatApiError = (err, fallbackMessage) => {
     const base = err?.message || fallbackMessage;
@@ -170,6 +172,56 @@ const UserProfileView = ({ user, onUpdate }) => {
     }));
     setError(null);
   };
+
+  const handleGetCompanyLocation = useCallback(() => {
+    setError(null);
+    setSuccess(null);
+
+    if (!canGetLocation) {
+      setError('Trình duyệt không hỗ trợ lấy vị trí (Geolocation). Vui lòng nhập tọa độ thủ công.');
+      return;
+    }
+
+    setCompanyLocating(true);
+    const timeoutId = setTimeout(() => {
+      setCompanyLocating(false);
+      setError('Hết thời gian chờ GPS (30s). Vui lòng kiểm tra: 1) Bật GPS/định vị, 2) Cấp quyền truy cập vị trí cho website, 3) Kết nối mạng ổn định.');
+    }, 30000);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        clearTimeout(timeoutId);
+        setCompanyFormData((prev) => ({
+          ...prev,
+          latitude: String(pos.coords.latitude),
+          longitude: String(pos.coords.longitude),
+        }));
+        setCompanyLocating(false);
+        setError(null);
+      },
+      (err) => {
+        clearTimeout(timeoutId);
+        setCompanyLocating(false);
+
+        let message = '';
+        if (err.code === 1) {
+          message = 'GPS bị từ chối: Vui lòng vào Cài đặt > Quyền riêng tư > Vị trí, cấp quyền cho trình duyệt.';
+        } else if (err.code === 2) {
+          message = 'Không thể lấy vị trí: Bật GPS/định vị trên thiết bị, đảm bảo có tín hiệu, rồi thử lại.';
+        } else if (err.code === 3) {
+          message = 'Hết thời gian chờ GPS: Tín hiệu GPS yếu hoặc kết nối mạng chậm. Thử lại ở ngoài trời.';
+        } else {
+          message = err?.message || 'Lỗi GPS không xác định';
+        }
+        setError(`Lỗi GPS: ${message}`);
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 30000,
+        maximumAge: 0,
+      }
+    );
+  }, [canGetLocation]);
 
   const handleSave = async () => {
     // Validate (account)
@@ -608,6 +660,22 @@ const UserProfileView = ({ user, onUpdate }) => {
                         )}
                       </div>
                     </div>
+
+                    {isEditing && (
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={handleGetCompanyLocation}
+                          disabled={companyLocating}
+                          className="bg-blue-900 text-white font-bold px-4 py-2 rounded hover:bg-blue-800 disabled:opacity-60"
+                        >
+                          {companyLocating ? 'Đang lấy GPS...' : '📍 Lấy GPS hiện tại'}
+                        </button>
+                        {!canGetLocation && (
+                          <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">⚠️ Thiết bị không hỗ trợ GPS → nhập tọa độ thủ công</span>
+                        )}
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>

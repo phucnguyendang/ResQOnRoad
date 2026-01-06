@@ -1,10 +1,13 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { createCompanyRegistration } from '../service/companyRegistrationService';
 import { loadAuth } from '../utils/authStorage';
 
 export default function CompanyRegistrationCreateView({ onNavigate }) {
   const auth = useMemo(() => loadAuth(), []);
   const user = auth?.user;
+
+  const [locating, setLocating] = useState(false);
+  const canGetLocation = useMemo(() => typeof navigator !== 'undefined' && !!navigator.geolocation, []);
 
   const [form, setForm] = useState({
     name: '',
@@ -55,6 +58,55 @@ export default function CompanyRegistrationCreateView({ onNavigate }) {
   }
 
   const setField = (k) => (e) => setForm((prev) => ({ ...prev, [k]: e.target.value }));
+
+  const handleGetLocation = useCallback(() => {
+    setError(null);
+
+    if (!canGetLocation) {
+      setError('Trình duyệt không hỗ trợ lấy vị trí (Geolocation). Vui lòng nhập tọa độ thủ công.');
+      return;
+    }
+
+    setLocating(true);
+    const timeoutId = setTimeout(() => {
+      setLocating(false);
+      setError('Hết thời gian chờ GPS (30s). Vui lòng kiểm tra: 1) Bật GPS/định vị, 2) Cấp quyền truy cập vị trí cho website, 3) Kết nối mạng ổn định.');
+    }, 30000);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        clearTimeout(timeoutId);
+        setForm((prev) => ({
+          ...prev,
+          latitude: String(pos.coords.latitude),
+          longitude: String(pos.coords.longitude),
+        }));
+        setLocating(false);
+        setError(null);
+      },
+      (err) => {
+        clearTimeout(timeoutId);
+        setLocating(false);
+
+        let message = '';
+        if (err.code === 1) {
+          message = 'GPS bị từ chối: Vui lòng vào Cài đặt > Quyền riêng tư > Vị trí, cấp quyền cho trình duyệt.';
+        } else if (err.code === 2) {
+          message = 'Không thể lấy vị trí: Bật GPS/định vị trên thiết bị, đảm bảo có tín hiệu, rồi thử lại.';
+        } else if (err.code === 3) {
+          message = 'Hết thời gian chờ GPS: Tín hiệu GPS yếu hoặc kết nối mạng chậm. Thử lại ở ngoài trời.';
+        } else {
+          message = err?.message || 'Lỗi GPS không xác định';
+        }
+        setError(`Lỗi GPS: ${message}`);
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 30000,
+        maximumAge: 0,
+      }
+    );
+  }, [canGetLocation]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -108,6 +160,20 @@ export default function CompanyRegistrationCreateView({ onNavigate }) {
               <input className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Số điện thoại *" value={form.phone} onChange={setField('phone')} required />
               <input className="md:col-span-2 w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Địa chỉ *" value={form.address} onChange={setField('address')} required />
               <input className="md:col-span-2 w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Email" value={form.email} onChange={setField('email')} />
+
+              <div className="md:col-span-2 flex items-center gap-3 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleGetLocation}
+                  disabled={locating}
+                  className="bg-blue-900 text-white font-bold px-4 py-2 rounded hover:bg-blue-800 disabled:opacity-60"
+                >
+                  {locating ? 'Đang lấy GPS...' : '📍 Lấy GPS hiện tại'}
+                </button>
+                {!canGetLocation && (
+                  <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">⚠️ Thiết bị không hỗ trợ GPS → nhập tọa độ thủ công</span>
+                )}
+              </div>
 
               <input className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Vĩ độ (latitude) *" value={form.latitude} onChange={setField('latitude')} required />
               <input className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Kinh độ (longitude) *" value={form.longitude} onChange={setField('longitude')} required />

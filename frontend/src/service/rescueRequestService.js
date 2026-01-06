@@ -143,3 +143,55 @@ export async function cancelRescueRequest(id) {
 
   return res.data;
 }
+
+/**
+ * UC205 - Accept rescue request (company)
+ * POST /api/rescue-requests/{id}/accept
+ */
+export async function acceptRescueRequest(id) {
+  const token = requireToken();
+
+  const res = await apiRequest(`/api/rescue-requests/${id}/accept`, {
+    method: 'POST',
+    token,
+  });
+
+  return res.data;
+}
+
+/**
+ * UC205 - Update rescue request status (company)
+ * PATCH /api/rescue-requests/{id}/status
+ */
+export async function updateRescueRequestStatus(id, { status, note } = {}) {
+  const token = requireToken();
+
+  const res = await apiRequest(`/api/rescue-requests/${id}/status`, {
+    method: 'PATCH',
+    token,
+    body: {
+      status,
+      note: note ?? null,
+    },
+  });
+
+  return res.data;
+}
+
+/**
+ * UC205 - Reject rescue request (company)
+ * POST /api/rescue-requests/{id}/reject
+ */
+export async function rejectRescueRequest(id, rejectionReason) {
+  const token = requireToken();
+
+  const res = await apiRequest(`/api/rescue-requests/${id}/reject`, {
+    method: 'POST',
+    token,
+    body: {
+      rejectionReason: String(rejectionReason || '').trim(),
+    },
+  });
+
+  return res.data;
+}

@@ -20,6 +20,11 @@ async function parseJsonSafe(res) {
 export async function apiRequest(path, { method = 'GET', body, token, headers } = {}) {
   const url = buildUrl(path);
   console.log(`🌐 API ${method} ${url}`, { token: token ? '✓' : '✗', body }); // DEBUG
+  const upperMethod = String(method || 'GET').toUpperCase();
+  const requestBody =
+    body === undefined || upperMethod === 'GET' || upperMethod === 'HEAD'
+      ? undefined
+      : (typeof body === 'string' ? body : JSON.stringify(body));
   
   const res = await fetch(url, {
     method,
@@ -28,7 +33,7 @@ export async function apiRequest(path, { method = 'GET', body, token, headers } 
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(headers || {}),
     },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: requestBody,
   });
 
   const payload = await parseJsonSafe(res);

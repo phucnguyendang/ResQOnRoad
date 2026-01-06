@@ -64,8 +64,15 @@ public class ReviewServiceImpl implements ReviewService {
 
         RescueCompany company = null;
         if (rescueRequest.getCompany() != null) {
-            company = rescueCompanyRepository.findById(rescueRequest.getCompany().getId())
-                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Công ty không tồn tại"));
+            // rescueRequest.getCompany() is an Account (COMPANY role).
+            // Its companyId points to rescue_companies.id.
+            Long rescueCompanyId = rescueRequest.getCompany().getCompanyId();
+            if (rescueCompanyId == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                "Không xác định được công ty cứu hộ cho yêu cầu này");
+            }
+            company = rescueCompanyRepository.findById(rescueCompanyId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Công ty không tồn tại"));
         } else {
             throw new ApiException(HttpStatus.BAD_REQUEST, 
                     "Yêu cầu này chưa được gán cho công ty nào");

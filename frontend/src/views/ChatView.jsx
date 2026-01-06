@@ -43,10 +43,20 @@ const ChatView = ({ onNavigate }) => {
   const [conversation, setConversation] = useState(null);
   const [text, setText] = useState('');
 
+  const listRef = useRef(null);
   const bottomRef = useRef(null);
   const requestId = useMemo(() => getLastRescueRequestId(), []);
   const auth = useMemo(() => loadAuth(), []);
   const myAccountId = auth?.user?.accountId ?? auth?.account_id;
+
+  const POLL_INTERVAL_MS = 2000;
+
+  const isNearBottom = () => {
+    const el = listRef.current;
+    if (!el) return true;
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+    return distance < 80;
+  };
 
   const scrollToBottom = () => {
     try {
@@ -56,13 +66,17 @@ const ChatView = ({ onNavigate }) => {
     }
   };
 
-  const refresh = async () => {
-    setLoading(true);
-    setError(null);
+  const refresh = async ({ silent } = {}) => {
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
     try {
       if (!requestId) {
         throw new Error('Chưa có mã yêu cầu để mở tin nhắn. Hãy chọn 1 yêu cầu trước.');
       }
+
+      const shouldStickToBottom = isNearBottom();
 
       // Ensure conversation exists
       const conv = normalizeConversation(await getOrCreateConversation(requestId));
@@ -76,7 +90,9 @@ const ChatView = ({ onNavigate }) => {
         markConversationRead(withMessages.id).catch(() => {});
       }
 
-      setTimeout(scrollToBottom, 50);
+      if (shouldStickToBottom) {
+        setTimeout(scrollToBottom, 50);
+      }
     } catch (err) {
       const details = Array.isArray(err?.details) && err.details.length > 0
         ? `: ${err.details.join(', ')}`
@@ -84,7 +100,7 @@ const ChatView = ({ onNavigate }) => {
       setError(`${err?.message || 'Không thể tải hội thoại'}${details}`);
       setConversation(null);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -92,6 +108,18 @@ const ChatView = ({ onNavigate }) => {
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!requestId) return;
+    if (!conversation?.id) return;
+
+    const timer = setInterval(() => {
+      refresh({ silent: true }).catch(() => {});
+    }, POLL_INTERVAL_MS);
+
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation?.id, requestId]);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -168,7 +196,7 @@ const ChatView = ({ onNavigate }) => {
             </div>
           )}
 
-          <div className="mt-6 border border-gray-200 rounded-lg bg-gray-50 h-[420px] overflow-y-auto p-3">
+          <div ref={listRef} className="mt-6 border border-gray-200 rounded-lg bg-gray-50 h-[420px] overflow-y-auto p-3">
             {loading && (
               <div className="text-sm text-gray-700">Đang tải tin nhắn...</div>
             )}

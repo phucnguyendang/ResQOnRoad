@@ -1,4 +1,5 @@
 import { apiRequest } from './apiClient';
+import { loadAuth } from '../utils/authStorage';
 
 function toQuery(params) {
   const usp = new URLSearchParams();
@@ -23,14 +24,20 @@ export async function getCompanyDetail(companyId) {
 }
 
 export async function getCompanyVehicles() {
-  const res = await apiRequest('/api/company/vehicles', { method: 'GET' });
+  const auth = loadAuth();
+  const res = await apiRequest('/api/company/vehicles', {
+    method: 'GET',
+    ...(auth?.token ? { token: auth.token } : {}),
+  });
   return res.data || [];
 }
 
 export async function createCompanyVehicle(vehicleData) {
+  const auth = loadAuth();
   const res = await apiRequest('/api/company/vehicles', {
     method: 'POST',
-    body: JSON.stringify(vehicleData)
+    ...(auth?.token ? { token: auth.token } : {}),
+    body: vehicleData,
   });
   return res.data;
 }
