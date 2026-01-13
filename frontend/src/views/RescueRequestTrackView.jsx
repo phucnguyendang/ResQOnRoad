@@ -79,18 +79,22 @@ const RescueRequestTrackView = ({ onNavigate }) => {
   const role = auth?.user?.role;
   const canRate = role === 'USER';
 
+  const POLL_INTERVAL_MS = 1000;
+
   useEffect(() => {
     const last = getLastRescueRequestId();
     if (last) setSelectedId(String(last));
   }, []);
 
-  const fetchDetail = async (explicitId) => {
+  const fetchDetail = async (explicitId, { silent } = {}) => {
     const effectiveId = explicitId ?? selectedId;
 
-    setLoading(true);
-    setError(null);
-    setDetail(null);
-    setTimeline(null);
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+      setDetail(null);
+      setTimeline(null);
+    }
 
     try {
       if (!effectiveId) {
@@ -107,9 +111,11 @@ const RescueRequestTrackView = ({ onNavigate }) => {
       const details = Array.isArray(err?.details) && err.details.length > 0
         ? `: ${err.details.join(', ')}`
         : '';
-      setError(`${err?.message || 'Không thể lấy chi tiết yêu cầu'}${details}`);
+      if (!silent) {
+        setError(`${err?.message || 'Không thể lấy chi tiết yêu cầu'}${details}`);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -117,6 +123,18 @@ const RescueRequestTrackView = ({ onNavigate }) => {
   useEffect(() => {
     if (!selectedId) return;
     fetchDetail(selectedId);
+  }, [selectedId]);
+
+  // Auto-reload detail every 1s
+  useEffect(() => {
+    if (!selectedId) return;
+
+    const timer = setInterval(() => {
+      fetchDetail(selectedId, { silent: true }).catch(() => {});
+    }, POLL_INTERVAL_MS);
+
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]);
 
   // Support both api_docs-style and current backend DTO style

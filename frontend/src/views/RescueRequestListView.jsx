@@ -36,14 +36,26 @@ const RescueRequestListView = ({ onNavigate }) => {
   const canCancel = role === 'USER';
   const canViewList = role === 'USER' || role === 'COMPANY';
 
+  const POLL_INTERVAL_MS = 1000;
+
   useEffect(() => {
-    const fetchList = async () => {
-      setLoading(true);
-      setError(null);
+    let disposed = false;
+    let inFlight = false;
+
+    const fetchList = async ({ silent } = {}) => {
+      if (inFlight) return;
+      inFlight = true;
+
+      if (!silent) {
+        setLoading(true);
+        setError(null);
+      }
       try {
         if (!canViewList) {
-          setActiveList([]);
-          setError('Tài khoản hiện tại không có danh sách theo dõi yêu cầu cứu hộ.');
+          if (!silent) {
+            setActiveList([]);
+            setError('Tài khoản hiện tại không có danh sách theo dõi yêu cầu cứu hộ.');
+          }
           return;
         }
 
@@ -62,16 +74,28 @@ const RescueRequestListView = ({ onNavigate }) => {
           return tb - ta;
         });
 
-        setActiveList(allRequests);
+        if (!disposed) setActiveList(allRequests);
       } catch (err) {
-        setActiveList([]);
-        setError(err?.message || 'Không thể tải danh sách yêu cầu');
+        if (!disposed && !silent) {
+          setActiveList([]);
+          setError(err?.message || 'Không thể tải danh sách yêu cầu');
+        }
       } finally {
-        setLoading(false);
+        if (!disposed && !silent) setLoading(false);
+        inFlight = false;
       }
     };
 
     fetchList();
+
+    const timer = setInterval(() => {
+      fetchList({ silent: true }).catch(() => {});
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      disposed = true;
+      clearInterval(timer);
+    };
   }, [canViewList, role]);
 
   const handleSelect = (id) => {

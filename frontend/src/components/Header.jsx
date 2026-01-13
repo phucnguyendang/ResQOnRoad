@@ -53,7 +53,7 @@ const Header = ({ onNavigate, currentView, user, onLogout }) => {
             <>
               <button onClick={() => onNavigate('adminCompanyRegistrations')} className={`hover:text-yellow-400 ${currentView === 'adminCompanyRegistrations' ? 'text-yellow-400 font-semibold' : ''}`}>Duyệt công ty</button>
               <button onClick={() => onNavigate('adminRescueCompanies')} className={`hover:text-yellow-400 ${currentView === 'adminRescueCompanies' ? 'text-yellow-400 font-semibold' : ''}`}>Quản lý công ty</button>
-              <button onClick={() => onNavigate('adminWorkflows')} className={`hover:text-yellow-400 ${currentView === 'adminWorkflows' ? 'text-yellow-400 font-semibold' : ''}`}>Quy trình</button>
+                <button onClick={() => onNavigate('adminWorkflows')} className={`hover:text-yellow-400 ${currentView === 'adminWorkflows' ? 'text-yellow-400 font-semibold' : ''}`}>Quản lý yêu cầu cứu hộ</button>
               <button onClick={() => onNavigate('adminPostManagement')} className={`hover:text-yellow-400 ${currentView === 'adminPostManagement' ? 'text-yellow-400 font-semibold' : ''}`}>Quản lý bài viết</button>
               <button onClick={() => onNavigate('moderation')} className={`hover:text-yellow-400 ${currentView === 'moderation' ? 'text-yellow-400 font-semibold' : ''}`}>Kiểm duyệt tài khoản</button>
             </>

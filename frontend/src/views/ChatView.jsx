@@ -44,12 +44,11 @@ const ChatView = ({ onNavigate }) => {
   const [text, setText] = useState('');
 
   const listRef = useRef(null);
-  const bottomRef = useRef(null);
   const requestId = useMemo(() => getLastRescueRequestId(), []);
   const auth = useMemo(() => loadAuth(), []);
   const myAccountId = auth?.user?.accountId ?? auth?.account_id;
 
-  const POLL_INTERVAL_MS = 2000;
+  const POLL_INTERVAL_MS = 1000;
 
   const isNearBottom = () => {
     const el = listRef.current;
@@ -59,10 +58,15 @@ const ChatView = ({ onNavigate }) => {
   };
 
   const scrollToBottom = () => {
+    const el = listRef.current;
+    if (!el) return;
+    const top = el.scrollHeight;
     try {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      // Scroll only inside the messages container (avoid scrolling the whole page)
+      el.scrollTo({ top, behavior: 'smooth' });
     } catch {
-      // ignore
+      // Fallback for older browsers
+      el.scrollTop = top;
     }
   };
 
@@ -91,6 +95,7 @@ const ChatView = ({ onNavigate }) => {
       }
 
       if (shouldStickToBottom) {
+        // Wait a tick so DOM renders the new message list height
         setTimeout(scrollToBottom, 50);
       }
     } catch (err) {
@@ -221,7 +226,6 @@ const ChatView = ({ onNavigate }) => {
                     </div>
                   );
                 })}
-                <div ref={bottomRef} />
               </div>
             )}
           </div>

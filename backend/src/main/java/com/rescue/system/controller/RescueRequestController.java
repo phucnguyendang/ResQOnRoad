@@ -126,6 +126,29 @@ public class RescueRequestController {
     }
 
     /**
+     * ADMIN: Get all rescue requests in the system
+     * GET /api/rescue-requests/admin/all
+     */
+    @GetMapping("/admin/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<RescueRequestDto>>> getAllRescueRequestsForAdmin() {
+        try {
+            List<RescueRequestDto> results = rescueRequestService.getAllRescueRequests();
+
+            ApiResponse<List<RescueRequestDto>> response = new ApiResponse<>(
+                    "Lấy danh sách tất cả yêu cầu cứu hộ thành công",
+                    results
+            );
+            return ResponseEntity.ok(response);
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to get all rescue requests: " + e.getMessage());
+        }
+    }
+
+    /**
      * Get rescue requests by status
      * GET /api/rescue-requests/status/{status}
      */

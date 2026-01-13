@@ -169,6 +169,14 @@ public class RescueRequestServiceImpl implements RescueRequestService {
                 .map(RescueRequestDto::new)
                 .collect(Collectors.toList());
     }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<RescueRequestDto> getAllRescueRequests() {
+        return rescueRequestRepository.findAll().stream()
+                .map(RescueRequestDto::new)
+                .collect(Collectors.toList());
+    }
 
     @Override
     @Transactional

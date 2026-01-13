@@ -41,6 +41,11 @@ public interface RescueRequestService {
      * Get all rescue requests by status
      */
     List<RescueRequestDto> getRescueRequestsByStatus(RescueStatus status);
+
+    /**
+     * ADMIN: Get all rescue requests in system
+     */
+    List<RescueRequestDto> getAllRescueRequests();
     
     /**
      * Accept rescue request - assign to company and change status to ACCEPTED

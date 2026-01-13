@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -28,6 +30,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class MessageServiceImpl implements MessageService {
+
+    private static final Logger log = LoggerFactory.getLogger(MessageServiceImpl.class);
 
     @Autowired
     private MessageRepository messageRepository;
@@ -57,8 +61,8 @@ public class MessageServiceImpl implements MessageService {
         // Get or create conversation
         Conversation conversation = getOrCreateConversationEntity(rescueRequest, sender);
 
-        // Check if conversation is still active
-        if (conversation.getStatus() != ConversationStatus.ACTIVE) {
+        // Allow messaging in any conversation status except ENDED
+        if (conversation.getStatus() == ConversationStatus.ENDED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Cuộc hội thoại đã kết thúc");
         }
 
@@ -75,7 +79,6 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ConversationDto getMessagesByRequestId(Long requestId, Long userId) {
         // Find conversation
         Conversation conversation = conversationRepository.findByRescueRequestId(requestId)
@@ -84,11 +87,16 @@ public class MessageServiceImpl implements MessageService {
         // Validate user is part of conversation
         validateUserInConversation(userId, conversation);
 
-        // Mark messages as read
-        messageRepository.markMessagesAsRead(conversation.getId(), userId);
-
-        // Get all messages
+        // Get all messages first; marking-as-read is best-effort to avoid failing message retrieval
         List<Message> messages = messageRepository.findByConversationId(conversation.getId());
+
+        try {
+            messageRepository.markMessagesAsRead(conversation.getId(), userId);
+        } catch (Exception ex) {
+            // SQLite can temporarily lock the database under concurrent writes (e.g., sending messages).
+            // Do not fail the whole API call just because marking-as-read couldn't acquire the lock.
+            log.warn("Failed to mark messages as read (conversationId={}, userId={})", conversation.getId(), userId, ex);
+        }
 
         return convertToConversationDto(conversation, messages, userId);
     }
