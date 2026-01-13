@@ -10,14 +10,6 @@ PRAGMA foreign_keys = ON;
 
 BEGIN;
 
--- NOTE:
--- This seed assumes UC404 columns already exist:
---   rescue_companies.profile_status, tax_code, hotline, operating_hours,
---   license_expiry_date, license_document_url, rejection_reason
--- and accounts.company_id.
--- If your local sqlite3 is older, conditional ALTER syntax isn't supported.
--- Use the companion PowerShell runner script to add missing columns safely.
-
 -- BCrypt hash used across existing seed scripts (password: password123)
 -- $2a$10$N9qo8uLOickgx2ZMRZoMyeOHbxJwqLHfp6d.zKa0Xj9dJwI1mTz8C
 
